@@ -1,46 +1,262 @@
-# Django Backend Starter
+# Django OTA Update API
 
-An enterprise-ready Django backend starter with Docker, PostgreSQL, Redis, JWT authentication, and more.
+A minimal, production-ready Django + DRF backend for managing Android Over-the-Air (OTA) APK updates.
 
-## Quick Start
+Admins upload APK releases via Django Admin. A Flutter app polls a public REST endpoint to check for updates and download the latest APK.
 
-1. Navigate to your project:
-   ```bash
-   cd <project_name>
-   ```
-
-2. Start all services:
-   ```bash
-   make up
-   ```
-
-3. API will be available at: http://localhost:8000
-
-4. Login endpoint: POST /api/auth/login/
-   - Phone: 1234567890
-   - Password: password
-
-## Available Commands
-
-- `make up`: Start all services with build
-- `make down`: Stop all services
-- `make migrate`: Run database migrations
-- `make shell`: Open Django shell
-- `make logs`: View service logs
-- `make test`: Run tests with pytest
-
-## API Documentation
-
-- Swagger UI: http://localhost:8000/docs/
-- Health checks:
-  - /health/ - General health
-  - /health/db/ - Database health
-  - /health/redis/ - Redis health
+---
 
 ## Project Structure
 
-- `apps/`: Custom Django apps (users, authentication, audit)
-- `core/`: Shared utilities (exceptions, permissions, health checks)
-- `infrastructure/`: Infrastructure code (Celery, tasks)
-- `docker/`: Docker configurations
-- `requirements/`: Python dependencies
+```
+.
+├── apps/
+│   └── ota/                  # OTA update feature
+│       ├── admin.py          # Admin panel config
+│       ├── models.py         # AppUpdate model
+│       ├── serializers.py    # DRF serializer
+│       ├── views.py          # API views
+│       └── urls.py           # URL routes
+├── config/
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── core/                     # Utilities (health checks, logging, exceptions)
+├── test/                     # Tests
+│   └── test_ota_api.py
+├── media/                    # APK uploads (auto-created, git-ignored)
+├── requirements/
+│   └── base.txt
+├── .env.example
+├── Dockerfile
+├── Makefile
+└── manage.py
+```
+
+---
+
+## Quick Start (Local Dev)
+
+### 1. Clone & setup
+
+```bash
+git clone <repo-url>
+cd django-app-ota-update
+
+cp .env.example .env
+# Edit .env with your Postgres credentials
+```
+
+### 2. Create virtual environment & install deps
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements/base.txt
+```
+
+### 3. Run migrations
+
+```bash
+python manage.py migrate
+```
+
+### 4. Create superuser (for admin panel)
+
+```bash
+python manage.py createsuperuser
+```
+
+### 5. Start dev server
+
+```bash
+python manage.py runserver
+```
+
+### URLs
+
+| URL | Description |
+|---|---|
+| `http://127.0.0.1:8000/admin/` | Django Admin (upload APKs here) |
+| `http://127.0.0.1:8000/api/update/` | Latest APK release |
+| `http://127.0.0.1:8000/api/updates/` | Full release history |
+| `http://127.0.0.1:8000/docs/` | Swagger UI |
+| `http://127.0.0.1:8000/health/` | Health check |
+| `http://127.0.0.1:8000/health/db/` | Database health check |
+
+---
+
+## Docker Compose (Recommended)
+
+```bash
+make up        # Build and start (Django + PostgreSQL)
+make migrate   # Run DB migrations
+make superuser # Create admin user
+make test      # Run tests
+make down      # Stop containers
+```
+
+---
+
+## API Reference
+
+### `GET /api/update/`
+
+Returns the latest APK release.
+
+**Response 200:**
+```json
+{
+    "version": "1.2.0",
+    "apk_url": "https://yourdomain.com/media/apks/app.apk",
+    "force_update": true,
+    "changelog": "Bug fixes and performance improvements",
+    "min_supported_version": "1.0.0",
+    "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**Response 404** (no releases yet):
+```json
+{
+    "detail": "No updates available."
+}
+```
+
+---
+
+### `GET /api/updates/`
+
+Returns full release history, newest first.
+
+**Response 200:**
+```json
+[
+    { "version": "1.2.0", "apk_url": "...", "force_update": true, ... },
+    { "version": "1.1.0", "apk_url": "...", "force_update": false, ... }
+]
+```
+
+---
+
+## Optional: API Key Protection
+
+Set a non-empty `API_KEY` in `.env`. Then send the key in every API request:
+
+```
+X-API-Key: your-secret-key
+```
+
+The key is available in `settings.OTA_API_KEY`. Wire it into a custom DRF permission class if you need enforced protection (the setting is ready for that).
+
+---
+
+## Model: `AppUpdate`
+
+| Field | Type | Description |
+|---|---|---|
+| `version` | CharField (unique) | Semver string, e.g. `1.2.0` |
+| `apk_file` | FileField | Uploaded to `media/apks/`. Max 200 MB |
+| `force_update` | BooleanField | If true, Flutter app must update |
+| `changelog` | TextField | Release notes (optional) |
+| `min_supported_version` | CharField | Minimum upgradeable version (optional) |
+| `created_at` | DateTimeField | Set automatically |
+
+---
+
+## Running Tests
+
+```bash
+# Local (no DB required — Django's test runner uses SQLite)
+source .venv/bin/activate
+pytest
+
+# Docker
+make test
+```
+
+---
+
+## Production Deployment
+
+### Option A — Gunicorn + Nginx
+
+1. **Set env vars** on the server (never commit `.env`):
+   ```bash
+   SECRET_KEY=<strong-random-key>
+   DEBUG=False
+   ALLOWED_HOSTS=yourdomain.com
+   POSTGRES_HOST=<db-host>
+   ...
+   ```
+
+2. **Collect static files:**
+   ```bash
+   python manage.py collectstatic --noinput
+   ```
+
+3. **Start Gunicorn:**
+   ```bash
+   gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+   ```
+
+4. **Nginx config snippet:**
+   ```nginx
+   server {
+       listen 80;
+       server_name yourdomain.com;
+
+       location /media/ {
+           alias /path/to/project/media/;
+       }
+
+       location /static/ {
+           alias /path/to/project/staticfiles/;
+       }
+
+       location / {
+           proxy_pass http://127.0.0.1:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+### Option B — AWS S3 for APK Storage (Recommended for Production)
+
+Install `django-storages` and `boto3`:
+
+```bash
+pip install django-storages boto3
+```
+
+Add to `settings.py`:
+
+```python
+INSTALLED_APPS += ["storages"]
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_REGION", "ap-southeast-1")
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = "public-read"
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/"
+```
+
+APKs will now be uploaded directly to S3 and served via CDN URL.
+
+---
+
+## Security Notes
+
+- `DEBUG=False` in production
+- Set a strong random `SECRET_KEY`
+- Add your domain to `ALLOWED_HOSTS`
+- Use HTTPS (Nginx + Let's Encrypt)
+- Django Admin is protected by login — create only one superuser account

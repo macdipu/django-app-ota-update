@@ -12,4 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . /app
 
-ENTRYPOINT ["python", "manage.py"]
+EXPOSE 8000
+
+# Default: production gunicorn. Override in docker-compose for dev (runserver).
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]

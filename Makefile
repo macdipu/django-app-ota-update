@@ -1,6 +1,6 @@
 COMPOSE = docker compose -f docker/compose/local.yml
 
-.PHONY: up down rebuild migrate shell logs test superuser clean
+.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean
 
 up:
 	$(COMPOSE) up --build
@@ -14,6 +14,9 @@ rebuild:
 migrate:
 	$(COMPOSE) run --rm web python manage.py migrate
 
+makemigrations:
+	$(COMPOSE) run --rm web python manage.py makemigrations
+
 shell:
 	$(COMPOSE) run --rm web python manage.py shell
 
@@ -25,6 +28,9 @@ test:
 
 superuser:
 	$(COMPOSE) run --rm web python manage.py createsuperuser
+
+collectstatic:
+	$(COMPOSE) run --rm web python manage.py collectstatic --noinput
 
 clean:
 	$(COMPOSE) down -v
