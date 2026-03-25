@@ -107,6 +107,14 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------------------------------------------------------------------
+# Migration modules — Clean Architecture: migrations live in infrastructure/
+# ---------------------------------------------------------------------------
+MIGRATION_MODULES = {
+    "ota": "apps.ota.infrastructure.migrations",
+}
+
+
+# ---------------------------------------------------------------------------
 # Django REST Framework
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {

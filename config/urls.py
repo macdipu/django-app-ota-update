@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 from core.health import health_check, db_health_check
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from apps.ota.admin_site import ota_admin_site
+from apps.ota.infrastructure.admin_site import ota_admin_site  # Δ8: moved to infrastructure
 
 urlpatterns = [
     # Root → Swagger docs

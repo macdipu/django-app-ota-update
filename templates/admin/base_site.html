@@ -1,0 +1,312 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | OTA Update Manager{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'ota_admin:index' %}" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
+    <span style="font-size:26px;line-height:1;">🚀</span>
+    <div>
+      <div style="font-size:16px;font-weight:700;color:#f1f5f9;letter-spacing:-0.3px;">OTA Update Manager</div>
+      <div style="font-size:10px;color:#7c3aed;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">Admin Portal</div>
+    </div>
+  </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0d0b1e;
+  --bg2:       #13102a;
+  --card:      #1a1740;
+  --border:    rgba(255,255,255,0.08);
+  --accent:    #7c3aed;
+  --accent2:   #06b6d4;
+  --text:      #f1f5f9;
+  --muted:     #94a3b8;
+  --danger:    #f87171;
+  --success:   #4ade80;
+  --warning:   #fbbf24;
+}
+
+/* ── Global ── */
+html, body { font-family: 'Inter', sans-serif !important; background: var(--bg) !important; color: var(--text) !important; }
+
+/* ── Header ── */
+#header {
+  background: linear-gradient(90deg, #0d0b1e 0%, #1a1040 50%, #0d1b2a 100%) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 20px !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.4) !important;
+  position: sticky; top: 0; z-index: 100;
+}
+#user-tools { color: var(--muted) !important; font-size: 12px !important; }
+#user-tools a { color: var(--accent2) !important; text-decoration: none; }
+#user-tools a:hover { color: var(--text) !important; }
+
+/* ── Breadcrumbs ── */
+div.breadcrumbs {
+  background: rgba(255,255,255,0.02) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--muted) !important;
+  padding: 10px 20px !important;
+  font-size: 13px !important;
+}
+div.breadcrumbs a { color: var(--accent2) !important; text-decoration: none; }
+div.breadcrumbs a:hover { color: var(--text) !important; }
+
+/* ── Content ── */
+#content-main { padding: 24px !important; }
+#content { background: transparent !important; }
+#content-related { background: var(--bg2) !important; border-left: 1px solid var(--border) !important; }
+
+/* ── Modules / Panels ── */
+.module, .module table {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3) !important;
+}
+.module caption, .module h2, .module h3 {
+  background: linear-gradient(90deg, rgba(124,58,237,0.2), rgba(6,182,212,0.1)) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  padding: 12px 16px !important;
+}
+
+/* ── Result table (list view) ── */
+#result_list {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#result_list thead th {
+  background: rgba(124,58,237,0.15) !important;
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+#result_list thead th a { color: var(--muted) !important; }
+#result_list thead th.sorted { background: rgba(124,58,237,0.25) !important; }
+#result_list thead th.sorted a { color: var(--accent2) !important; }
+#result_list tbody tr {
+  border-bottom: 1px solid var(--border) !important;
+  transition: background 0.15s;
+}
+#result_list tbody tr:hover { background: rgba(124,58,237,0.07) !important; }
+#result_list tbody td { padding: 14px 16px !important; color: var(--text) !important; font-size: 13px !important; }
+#result_list tbody td a { color: var(--accent2) !important; text-decoration: none; font-weight: 500; }
+#result_list tbody td a:hover { color: var(--text) !important; }
+#result_list tfoot { background: var(--bg2) !important; border-top: 1px solid var(--border) !important; padding: 10px !important; }
+
+/* ── Changelist actions ── */
+#changelist-search label, #changelist-search input { color: var(--text) !important; }
+#changelist-search input {
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  color: var(--text) !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+#changelist-search input:focus { border-color: var(--accent) !important; outline: none !important; }
+#changelist-search input[type=submit] {
+  background: var(--accent) !important;
+  color: white !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s !important;
+}
+#changelist-search input[type=submit]:hover { opacity: 0.85 !important; }
+
+/* ── Add button / action bar ── */
+.addlink, .object-tools a {
+  background: linear-gradient(135deg, var(--accent), #9333ea) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  border: none !important;
+  transition: all 0.2s !important;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.35) !important;
+}
+.addlink:hover, .object-tools a:hover {
+  opacity: 0.9 !important;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.5) !important;
+  color: white !important;
+}
+.object-tools { padding-top: 0 !important; }
+
+/* ── Filter sidebar ── */
+#changelist-filter {
+  background: var(--bg2) !important;
+  border-left: 1px solid var(--border) !important;
+}
+#changelist-filter h2, #changelist-filter h3 {
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  letter-spacing: 1px !important;
+}
+#changelist-filter li { border-bottom: 1px solid rgba(255,255,255,0.04) !important; }
+#changelist-filter li a { color: var(--muted) !important; text-decoration: none; padding: 4px 0; display: block; }
+#changelist-filter li a:hover { color: var(--accent2) !important; }
+#changelist-filter li.selected a { color: var(--accent2) !important; font-weight: 600 !important; }
+
+/* ── Form (change_form) ── */
+fieldset {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  padding: 0 !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25) !important;
+  overflow: hidden !important;
+}
+fieldset h2 {
+  background: linear-gradient(90deg, rgba(124,58,237,0.2), rgba(6,182,212,0.1)) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  padding: 12px 20px !important;
+  margin: 0 !important;
+}
+.form-row {
+  padding: 16px 20px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.form-row:last-child { border-bottom: none !important; }
+.form-row label { color: var(--muted) !important; font-size: 12px !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; }
+.form-row p.help { color: #475569 !important; font-size: 12px !important; margin-top: 4px !important; }
+input[type=text], input[type=number], input[type=email], input[type=url],
+input[type=date], textarea, select, .vTextField {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  color: var(--text) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+  transition: all 0.2s !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent) !important;
+  background: rgba(124,58,237,0.07) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15) !important;
+}
+input::placeholder, textarea::placeholder { color: #334155 !important; }
+select option { background: #1a1740 !important; color: var(--text) !important; }
+
+/* File field */
+.file-upload p { color: var(--muted) !important; font-size: 12px !important; }
+.file-upload a { color: var(--accent2) !important; }
+
+/* Checkbox toggle */
+input[type=checkbox] {
+  width: 18px !important; height: 18px !important;
+  accent-color: var(--accent) !important;
+  cursor: pointer !important;
+}
+
+/* ── Submit row ── */
+.submit-row {
+  background: var(--bg2) !important;
+  border-top: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  padding: 16px 20px !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+.submit-row input[type=submit], .submit-row a {
+  border-radius: 10px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+}
+.submit-row input[name=_save] {
+  background: linear-gradient(135deg, var(--accent), #9333ea) !important;
+  color: white !important;
+  box-shadow: 0 2px 14px rgba(124,58,237,0.4) !important;
+}
+.submit-row input[name=_save]:hover { box-shadow: 0 4px 20px rgba(124,58,237,0.6) !important; }
+.submit-row input[name=_addanother] {
+  background: rgba(6,182,212,0.12) !important;
+  color: var(--accent2) !important;
+  border-color: rgba(6,182,212,0.3) !important;
+}
+.submit-row a.deletelink {
+  color: var(--danger) !important;
+  background: rgba(248,113,113,0.1) !important;
+  border-color: rgba(248,113,113,0.25) !important;
+  margin-left: auto !important;
+}
+.submit-row a.deletelink:hover { background: rgba(248,113,113,0.2) !important; }
+
+/* ── Messages / Alerts ── */
+.messagelist { list-style: none !important; padding: 0 24px !important; margin: 12px 0 !important; }
+.messagelist li {
+  border-radius: 10px !important;
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  margin-bottom: 8px !important;
+  border: 1px solid transparent !important;
+}
+.messagelist li.success { background: rgba(74,222,128,0.1) !important; border-color: rgba(74,222,128,0.25) !important; color: var(--success) !important; }
+.messagelist li.warning { background: rgba(251,191,36,0.1) !important; border-color: rgba(251,191,36,0.25) !important; color: var(--warning) !important; }
+.messagelist li.error   { background: rgba(248,113,113,0.1) !important; border-color: rgba(248,113,113,0.25) !important; color: var(--danger)  !important; }
+
+/* ── Dashboard app index ── */
+#content-main .app-ota { }
+.app-ota > table { width: 100% !important; }
+.section a.section:link, .section a.section:visited { color: var(--accent2) !important; }
+
+/* ── Pagination ── */
+.paginator {
+  color: var(--muted) !important;
+  background: transparent !important;
+  padding: 12px 0 !important;
+  font-size: 13px !important;
+}
+.paginator a, .paginator .this-page {
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  text-decoration: none !important;
+}
+.paginator a { color: var(--accent2) !important; }
+.paginator .this-page { background: var(--accent) !important; color: white !important; }
+
+/* ── Misc ── */
+a:link, a:visited { color: var(--accent2); }
+a:hover { color: var(--text); }
+p.help, .help { color: #475569 !important; }
+hr { border-color: var(--border) !important; }
+</style>
+{% endblock %}

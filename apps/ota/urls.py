@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.ota import views
+from apps.ota.interfaces.api import views
 
 urlpatterns = [
     # GET /api/update/   → latest release
