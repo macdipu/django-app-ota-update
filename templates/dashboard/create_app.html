@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Create App | OTA Portal{% endblock %}
+
+{% block page_title %}Create New App{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <h2 style="margin-bottom: 24px; font-weight: 600;">App Details</h2>
+        
+        <form method="POST" action="{% url 'admin:ui_app_create' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_name">App Name</label>
+                {{ form.name.errors }}
+                <input type="text" name="name" id="id_name" class="form-control" placeholder="e.g. Merchant App" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_package_name">Package Name</label>
+                {{ form.package_name.errors }}
+                <input type="text" name="package_name" id="id_package_name" class="form-control" placeholder="e.g. com.example.merchant" required>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Android reverse domain format. Unique for each app.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_description">Description (Optional)</label>
+                {{ form.description.errors }}
+                <textarea name="description" id="id_description" class="form-control" placeholder="Brief info about this application..."></textarea>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <a href="{% url 'admin:index' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ph ph-check"></i> Create App
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

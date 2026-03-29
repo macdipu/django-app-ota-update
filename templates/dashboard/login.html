@@ -1,0 +1,127 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Sign In" %} | OTA Dashboard</title>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'dashboard/css/style.css' %}">
+    
+    <style>
+        .login-layout {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            padding: var(--sp-6);
+        }
+        
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            padding: 40px var(--sp-8);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--sp-8);
+        }
+        
+        .login-header .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            background-color: #eef2ff;
+            color: var(--primary);
+            border-radius: var(--radius-lg);
+            font-size: 28px;
+            margin-bottom: var(--sp-4);
+        }
+        
+        .login-header h1 {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: var(--sp-6);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-layout">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="icon">
+                    <i class="ph-fill ph-rocket-launch"></i>
+                </div>
+                <h1>Welcome Back</h1>
+                <p>Sign in to your OTA Manager dashboard</p>
+            </div>
+            
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    <i class="ph ph-warning-circle"></i>
+                    {% trans "Invalid username or password. Please try again." %}
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ app_path }}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}" />
+                
+                <div class="form-group">
+                    <label for="id_username">{% trans "Username" %}</label>
+                    <div style="position: relative;">
+                        <i class="ph ph-user" style="position: absolute; left: 14px; top: 12px; color: var(--text-muted);"></i>
+                        <input type="text" name="username" id="id_username" class="form-control" style="padding-left: 40px;" placeholder="Enter your username" autofocus required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password">{% trans "Password" %}</label>
+                    <div style="position: relative;">
+                        <i class="ph ph-lock" style="position: absolute; left: 14px; top: 12px; color: var(--text-muted);"></i>
+                        <input type="password" name="password" id="id_password" class="form-control" style="padding-left: 40px;" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 24px; margin-bottom: 24px;">
+                    <input type="checkbox" name="remember_me" id="remember_me" style="width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer;">
+                    <label for="remember_me" style="margin-bottom: 0; cursor: pointer; color: var(--text-muted); font-weight: 400;">{% trans "Remember me for 30 days" %}</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; height: 44px; font-size: 1rem;">
+                    {% trans "Sign In" %}
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                Protected Admin Area &copy; OTA Update Manager
+            </div>
+        </div>
+    </div>
+</body>
+</html>

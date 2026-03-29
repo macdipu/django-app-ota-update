@@ -1,0 +1,59 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Dashboard | OTA Portal{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Mobile Apps</h2>
+    <a href="{% url 'admin:ui_app_create' %}" class="btn btn-primary">
+        <i class="ph ph-plus"></i> Create App
+    </a>
+</div>
+
+{% if apps %}
+    <div class="grid-cards">
+        {% for app in apps %}
+        <div class="card app-card">
+            <div class="app-card-header">
+                <div class="app-info">
+                    <h3>{{ app.name }}</h3>
+                    <p>{{ app.package_name }}</p>
+                </div>
+                <!-- App Icon placeholder or Image -->
+                <div class="app-icon">
+                    <i class="ph ph-device-mobile"></i>
+                </div>
+            </div>
+            
+            <div class="app-stats">
+                <span>Latest Version: <strong>{{ app.latest_version }}</strong></span>
+                <span>Releases: <strong>{{ app.release_count }}</strong></span>
+            </div>
+            
+            <div class="app-card-actions">
+                <a href="{% url 'admin:ui_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
+                    History
+                </a>
+                <a href="{% url 'admin:ui_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
+                    <i class="ph ph-upload-simple"></i> Upload
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Screen 1: Empty State -->
+    <div class="card empty-state">
+        <div class="empty-state-icon">
+            <i class="ph ph-folder-dashed" style="font-size: 32px;"></i>
+        </div>
+        <h3>No Apps Found</h3>
+        <p>You haven’t created any mobile apps yet. Get started by adding your first app project.</p>
+        <a href="{% url 'admin:ui_app_create' %}" class="btn btn-primary">
+            <i class="ph ph-plus"></i> Create App
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
