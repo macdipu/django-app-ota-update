@@ -10,8 +10,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
-MAX_APK_SIZE_MB = 200
-MAX_APK_SIZE_BYTES = MAX_APK_SIZE_MB * 1024 * 1024  # 200 MB
+MAX_APK_SIZE_MB = 500
+MAX_APK_SIZE_BYTES = MAX_APK_SIZE_MB * 1024 * 1024  # 500 MB
 
 
 def validate_apk_size(file):
@@ -90,7 +90,7 @@ class AppUpdate(models.Model):
     apk_file = models.FileField(
         upload_to="apks/",
         validators=[validate_apk_size, validate_apk_extension],
-        help_text="Upload the APK file (max 200 MB).",
+        help_text="Upload the APK file (max 500 MB).",
     )
     force_update = models.BooleanField(
         default=False,
