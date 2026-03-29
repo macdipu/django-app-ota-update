@@ -43,10 +43,10 @@
             </div>
             
             <div class="app-card-actions" style="display:flex;align-items:center;gap:8px;">
-                <a href="{% url 'ota_admin:ui_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
+                <a href="{% url 'dashboard_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
                     History
                 </a>
-                <a href="{% url 'ota_admin:ui_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
+                <a href="{% url 'dashboard_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
                     <i class="ph ph-upload-simple"></i> Upload
                 </a>
 

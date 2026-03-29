@@ -53,10 +53,10 @@ def release_delete(request, app_pk, pk):
             version = release.version
             release.delete()
             messages.success(request, f"Release {version} deleted.")
-            return redirect("ota_admin:ui_app_detail", pk=app.pk)
+            return redirect("dashboard_app_detail", pk=app.pk)
         else:
             messages.error(request, "Deletion cancelled — confirmation not checked.")
-            return redirect("ota_admin:ui_app_detail", pk=app.pk)
+            return redirect("dashboard_app_detail", pk=app.pk)
 
     return render(request, "dashboard/confirm_delete_release.html", {"app": app, "release": release})
 
@@ -76,6 +76,8 @@ def app_create(request):
     
     return render(request, "dashboard/create_app.html", {"form": form})
 
+
+@staff_member_required
 def app_detail(request, pk):
     app = get_object_or_404(MobileApp, pk=pk)
     
@@ -86,7 +88,7 @@ def app_detail(request, pk):
             update.app = app
             update.save()
             messages.success(request, f"Version {update.version} uploaded successfully!")
-            return redirect("ota_admin:ui_app_detail", pk=app.pk)
+            return redirect("dashboard_app_detail", pk=app.pk)
         else:
             messages.error(request, "Failed to upload APK. Please check the form below.")
     else:

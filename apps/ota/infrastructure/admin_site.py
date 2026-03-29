@@ -42,7 +42,6 @@ class OtaAdminSite(AdminSite):
         custom_urls = [
             path("app/create/", self.admin_view(ui_views.app_create), name="ui_app_create"),
             path("app/<int:pk>/", self.admin_view(ui_views.app_detail), name="ui_app_detail"),
-            # Delete endpoints with explicit confirmation page (POST to perform deletion)
             path("app/<int:pk>/delete/", self.admin_view(ui_views.app_delete), name="ui_app_delete"),
             path("app/<int:app_pk>/release/<int:pk>/delete/", self.admin_view(ui_views.release_delete), name="ui_release_delete"),
         ]

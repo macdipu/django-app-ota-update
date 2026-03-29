@@ -22,7 +22,7 @@
                 <span class="badge badge-primary">{{ app.package_name }}</span>
             </div>
             
-            <form method="POST" action="{% url 'ota_admin:ui_app_detail' app.pk %}" enctype="multipart/form-data">
+            <form method="POST" action="{% url 'dashboard_app_detail' app.pk %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 
                 {{ form.non_field_errors }}
@@ -108,7 +108,7 @@
                                 <a href="{{ release.apk_file.url }}" class="btn btn-outline btn-sm" title="Download">
                                     <i class="ph ph-download-simple"></i>
                                 </a>
-                                <a href="{% url 'ota_admin:ui_release_delete' app.pk release.pk %}" class="btn btn-outline btn-sm" title="Delete" style="margin-left:8px;color:var(--danger);">
+                                <a href="{% url 'dashboard_release_delete' app.pk release.pk %}" class="btn btn-outline btn-sm" title="Delete" style="margin-left:8px;color:var(--danger);">
                                     <i class="ph ph-trash-simple"></i>
                                 </a>
                             </td>
