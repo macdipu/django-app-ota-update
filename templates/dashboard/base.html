@@ -14,27 +14,7 @@
 </head>
 <body>
     <div class="app-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <i class="ph-fill ph-rocket-launch"></i>
-                OTA Portal
-            </div>
-            <nav class="sidebar-nav">
-                <a href="{% url 'admin:index' %}" class="nav-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-                    <i class="ph ph-squares-four"></i>
-                    Dashboard
-                </a>
-                <a href="{% url 'admin:index' %}" class="nav-item">
-                    <i class="ph ph-app-window"></i>
-                    Apps
-                </a>
-                <a href="{% url 'admin:ui_app_create' %}" class="nav-item highlight">
-                    <i class="ph ph-plus"></i>
-                    Create App
-                </a>
-            </nav>
-        </aside>
+        {# Sidebar removed — dashboard uses full-width main content now #}
 
         <!-- Main Content Wrapper -->
         <main class="main-wrapper">

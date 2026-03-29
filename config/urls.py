@@ -5,12 +5,14 @@ from django.shortcuts import redirect
 from core.health import health_check, db_health_check
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from apps.ota.infrastructure.admin_site import ota_admin_site  # Δ8: moved to infrastructure
+from apps.ota.interfaces.ui.views import dashboard as dashboard_view
 
 urlpatterns = [
-    # Root → Admin docs
-    path("", lambda request: redirect("admin/"), name="root"),
+    # Root → Dashboard
+    path("", lambda request: redirect("dashboard"), name="root"),
+    path("dashboard/", dashboard_view, name="dashboard"),
 
-    # Custom OTA admin site
+    # Custom OTA admin site (mounted at /admin/)
     path("admin/", ota_admin_site.urls),
 
     # OTA API

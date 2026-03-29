@@ -7,7 +7,7 @@
 {% block content %}
 <div class="page-header">
     <h2>Mobile Apps</h2>
-    <a href="{% url 'admin:ui_app_create' %}" class="btn btn-primary">
+    <a href="{% url 'ota_admin:ui_app_create' %}" class="btn btn-primary">
         <i class="ph ph-plus"></i> Create App
     </a>
 </div>
@@ -15,7 +15,7 @@
 {% if apps %}
     <div class="grid-cards">
         {% for app in apps %}
-        <div class="card app-card">
+        <div class="card app-card" style="position: relative;">
             <div class="app-card-header">
                 <div class="app-info">
                     <h3>{{ app.name }}</h3>
@@ -26,19 +26,30 @@
                     <i class="ph ph-device-mobile"></i>
                 </div>
             </div>
-            
+
+            <!-- three-dot overflow menu to top-right -->
+            <div class="more-menu" style="position:absolute;right:2px;top:4px;">
+                <button type="button" class="more-btn" aria-haspopup="true" aria-expanded="false" title="More" style="background:none;border:none;font-size:18px;cursor:pointer;padding:2px 4px;line-height:1;">
+                    ⋯
+                </button>
+                <div class="more-dropdown" style="display:none;position:absolute;right:0;top:28px;z-index:50;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,0.08);min-width:160px;">
+                    <a href="{% url 'ota_admin:ui_app_delete' app.pk %}" class="more-item" style="display:block;padding:10px 12px;color:var(--danger);text-decoration:none;">Delete App</a>
+                </div>
+            </div>
+
             <div class="app-stats">
                 <span>Latest Version: <strong>{{ app.latest_version }}</strong></span>
                 <span>Releases: <strong>{{ app.release_count }}</strong></span>
             </div>
             
-            <div class="app-card-actions">
-                <a href="{% url 'admin:ui_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
+            <div class="app-card-actions" style="display:flex;align-items:center;gap:8px;">
+                <a href="{% url 'ota_admin:ui_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
                     History
                 </a>
-                <a href="{% url 'admin:ui_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
+                <a href="{% url 'ota_admin:ui_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
                     <i class="ph ph-upload-simple"></i> Upload
                 </a>
+
             </div>
         </div>
         {% endfor %}
@@ -51,7 +62,7 @@
         </div>
         <h3>No Apps Found</h3>
         <p>You haven’t created any mobile apps yet. Get started by adding your first app project.</p>
-        <a href="{% url 'admin:ui_app_create' %}" class="btn btn-primary">
+        <a href="{% url 'ota_admin:ui_app_create' %}" class="btn btn-primary">
             <i class="ph ph-plus"></i> Create App
         </a>
     </div>

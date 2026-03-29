@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Confirm Delete App | OTA Portal{% endblock %}
+
+{% block page_title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;margin:40px auto;">
+    <div class="card">
+        <h3>Delete app: {{ app.name }}</h3>
+        <p>This will permanently delete the app <strong>{{ app.name }}</strong> and all its releases. This action cannot be undone.</p>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin: 16px 0;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="confirm" value="yes"> I understand this will permanently delete the app and its releases
+                </label>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:24px;">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-danger">Delete App</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

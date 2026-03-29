@@ -42,12 +42,17 @@ class OtaAdminSite(AdminSite):
         custom_urls = [
             path("app/create/", self.admin_view(ui_views.app_create), name="ui_app_create"),
             path("app/<int:pk>/", self.admin_view(ui_views.app_detail), name="ui_app_detail"),
+            # Delete endpoints with explicit confirmation page (POST to perform deletion)
+            path("app/<int:pk>/delete/", self.admin_view(ui_views.app_delete), name="ui_app_delete"),
+            path("app/<int:app_pk>/release/<int:pk>/delete/", self.admin_view(ui_views.release_delete), name="ui_release_delete"),
         ]
         return custom_urls + urls
 
     def index(self, request, extra_context=None):
-        from apps.ota.interfaces.ui.views import dashboard
-        return dashboard(request)
+        # Use the standard AdminSite index view so the admin root (e.g. /admin/)
+        # displays the Django admin index. The site-level dashboard is exposed
+        # separately at /dashboard/ (configured in config/urls.py).
+        return super().index(request, extra_context=extra_context)
 
 
 # Singleton — imported by infrastructure/admin.py and config/urls.py

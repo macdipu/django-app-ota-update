@@ -9,7 +9,7 @@
     <div class="card">
         <h2 style="margin-bottom: 24px; font-weight: 600;">App Details</h2>
         
-        <form method="POST" action="{% url 'admin:ui_app_create' %}">
+        <form method="POST" action="{% url 'ota_admin:ui_app_create' %}">
             {% csrf_token %}
             
             <div class="form-group">
@@ -32,7 +32,7 @@
             </div>
             
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
-                <a href="{% url 'admin:index' %}" class="btn btn-outline">Cancel</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="ph ph-check"></i> Create App
                 </button>

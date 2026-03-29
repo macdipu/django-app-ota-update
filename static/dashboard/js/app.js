@@ -53,3 +53,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// Overflow menu (three-dot) toggle for app cards
+document.addEventListener("DOMContentLoaded", function () {
+    // Delegate to all .more-btn buttons
+    const moreButtons = document.querySelectorAll('.more-btn');
+
+    moreButtons.forEach(btn => {
+        const container = btn.closest('.more-menu');
+        const dropdown = container && container.querySelector('.more-dropdown');
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.style.display === 'block';
+            // Close any other open dropdowns
+            document.querySelectorAll('.more-dropdown').forEach(d => d.style.display = 'none');
+            dropdown.style.display = isOpen ? 'none' : 'block';
+        });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('.more-dropdown').forEach(d => d.style.display = 'none');
+    });
+});
+
