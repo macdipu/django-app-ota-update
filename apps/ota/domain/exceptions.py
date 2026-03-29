@@ -24,5 +24,16 @@ class NoUpdatesAvailableError(OtaDomainError):
         super().__init__(message)
 
 
+class AppNotFoundError(OtaDomainError):
+    """Raised when the requested package_name does not match any registered app.
+
+    The interface layer maps this to HTTP 404.
+    """
+
+    def __init__(self, package_name: str = ""):
+        msg = f"No app found with package name '{package_name}'." if package_name else "App not found."
+        super().__init__(msg)
+
+
 class InvalidVersionError(OtaDomainError):
     """Raised when a version string does not meet domain constraints."""

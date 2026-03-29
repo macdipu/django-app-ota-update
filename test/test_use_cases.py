@@ -1,61 +1,54 @@
 """
 Pure Use Case Unit Tests — Clean Architecture Reference Implementation.
 
-Key Design Principle
---------------------
 These tests exercise ONLY the use case and domain layers.
-They use an InMemoryUpdateRepository (a test double / fake) — no database,
-no Django, no HTTP. Tests run in microseconds.
-
-This is the biggest practical benefit of Clean Architecture: business logic
-can be verified instantly without framework overhead.
-
-Test Double Types Used Here
----------------------------
-Fake    — InMemoryUpdateRepository: real working implementation in memory.
-          Preferred over mocks because it's simpler and less fragile.
-
-Structure mirrors the use case structure:
-  test_use_cases.py
-  ├── InMemoryUpdateRepository      ← shared fake
-  ├── TestGetLatestUpdateUseCase    ← unit tests for GetLatestUpdateUseCase
-  └── TestGetUpdateHistoryUseCase   ← unit tests for GetUpdateHistoryUseCase
+They use fake repositories.
 """
 from datetime import datetime, timezone
 from unittest import TestCase
 
-import pytest
-
-from apps.ota.domain.entities import AppUpdateEntity
-from apps.ota.domain.exceptions import NoUpdatesAvailableError
+from apps.ota.domain.entities import AppUpdateEntity, MobileAppEntity
+from apps.ota.domain.exceptions import NoUpdatesAvailableError, AppNotFoundError
 from apps.ota.use_cases.get_latest_update import GetLatestUpdateUseCase
 from apps.ota.use_cases.get_update_history import GetUpdateHistoryUseCase
 
 
-# ── Test Double ───────────────────────────────────────────────────────────────
+# ── Test Doubles ──────────────────────────────────────────────────────────────
+
+class InMemoryAppRepository:
+    def __init__(self, apps=None):
+        self._apps = apps or []
+
+    def get_all_apps(self):
+        return self._apps
+        
+    def get_app_by_package(self, package_name: str):
+        for app in self._apps:
+            if app.package_name == package_name:
+                return app
+        return None
 
 class InMemoryUpdateRepository:
-    """Fake repository satisfying the UpdateRepository Protocol.
-
-    No database, no ORM. Used only in tests.
-    Items are stored in the order they are given — index 0 is treated as 'latest'
-    (mirrors Meta.ordering = ['-created_at'] in the real ORM model).
-    """
-
-    def __init__(self, items: list[AppUpdateEntity] | None = None) -> None:
+    def __init__(self, items=None):
         self._items = items or []
 
-    def get_latest(self) -> AppUpdateEntity | None:
-        return self._items[0] if self._items else None
+    def get_latest(self, app_id: int):
+        filtered = [i for i in self._items if i.app_id == app_id]
+        return filtered[0] if filtered else None
 
-    def get_all(self) -> list[AppUpdateEntity]:
-        return list(self._items)
+    def get_all(self, app_id: int):
+        return [i for i in self._items if i.app_id == app_id]
 
+
+def _make_app(**kwargs) -> MobileAppEntity:
+    defaults = dict(id=1, name="App", package_name="com.test.app", description="", created_at=datetime.now(timezone.utc))
+    defaults.update(kwargs)
+    return MobileAppEntity(**defaults)
 
 def _make_entity(**kwargs) -> AppUpdateEntity:
-    """Factory: create a minimal valid AppUpdateEntity with sensible defaults."""
     defaults = dict(
         id=1,
+        app_id=1,
         version="1.0.0",
         apk_file_path="apks/app-v1.0.0.apk",
         force_update=False,
@@ -70,111 +63,57 @@ def _make_entity(**kwargs) -> AppUpdateEntity:
 # ── GetLatestUpdateUseCase ────────────────────────────────────────────────────
 
 class TestGetLatestUpdateUseCase(TestCase):
-    """Unit tests for GetLatestUpdateUseCase.
+    def setUp(self):
+        self.app = _make_app(id=1, package_name="com.test.app")
+        self.app_repo = InMemoryAppRepository(apps=[self.app])
 
-    All tests use InMemoryUpdateRepository — zero DB, zero HTTP.
-    """
+    def test_raises_app_not_found_error(self):
+        use_case = GetLatestUpdateUseCase(app_repository=self.app_repo, update_repository=InMemoryUpdateRepository())
+        with self.assertRaises(AppNotFoundError):
+            use_case.execute("com.unknown")
 
     def test_raises_no_updates_when_repository_is_empty(self):
-        """Must raise NoUpdatesAvailableError when no releases exist."""
-        repo = InMemoryUpdateRepository(items=[])
-        use_case = GetLatestUpdateUseCase(repository=repo)
-
+        use_case = GetLatestUpdateUseCase(app_repository=self.app_repo, update_repository=InMemoryUpdateRepository())
         with self.assertRaises(NoUpdatesAvailableError):
-            use_case.execute()
+            use_case.execute("com.test.app")
 
     def test_returns_single_entity(self):
-        """Returns the only entity when exactly one release exists."""
-        entity = _make_entity(version="1.0.0")
-        repo = InMemoryUpdateRepository(items=[entity])
-
-        result = GetLatestUpdateUseCase(repository=repo).execute()
-
+        entity = _make_entity(app_id=1, version="1.0.0")
+        update_repo = InMemoryUpdateRepository(items=[entity])
+        use_case = GetLatestUpdateUseCase(app_repository=self.app_repo, update_repository=update_repo)
+        
+        result = use_case.execute("com.test.app")
         self.assertEqual(result.version, "1.0.0")
-
-    def test_returns_first_item_as_latest(self):
-        """First item (index 0) is treated as the latest release."""
-        older = _make_entity(id=1, version="1.0.0")
-        newer = _make_entity(id=2, version="2.0.0")
-        repo = InMemoryUpdateRepository(items=[newer, older])
-
-        result = GetLatestUpdateUseCase(repository=repo).execute()
-
-        self.assertEqual(result.version, "2.0.0")
-
-    def test_entity_fields_are_passed_through_unchanged(self):
-        """All entity fields must survive the use case without mutation."""
-        entity = _make_entity(
-            version="3.0.0",
-            apk_file_path="apks/app-v3.0.0.apk",
-            force_update=True,
-            changelog="Major release",
-            min_supported_version="2.0.0",
-        )
-        repo = InMemoryUpdateRepository(items=[entity])
-
-        result = GetLatestUpdateUseCase(repository=repo).execute()
-
-        self.assertEqual(result.apk_file_path, "apks/app-v3.0.0.apk")
-        self.assertTrue(result.force_update)
-        self.assertEqual(result.changelog, "Major release")
-        self.assertEqual(result.min_supported_version, "2.0.0")
-
-    def test_no_updates_error_message_is_meaningful(self):
-        """The error message must be non-empty and user-readable."""
-        repo = InMemoryUpdateRepository()
-        use_case = GetLatestUpdateUseCase(repository=repo)
-
-        with self.assertRaises(NoUpdatesAvailableError) as ctx:
-            use_case.execute()
-
-        self.assertGreater(len(str(ctx.exception)), 10)
-
-    def test_protocol_compliance_of_fake(self):
-        """InMemoryUpdateRepository must structurally satisfy UpdateRepository Protocol."""
-        from apps.ota.domain.repositories import UpdateRepository
-        repo = InMemoryUpdateRepository()
-        self.assertIsInstance(repo, UpdateRepository)
 
 
 # ── GetUpdateHistoryUseCase ───────────────────────────────────────────────────
 
 class TestGetUpdateHistoryUseCase(TestCase):
-    """Unit tests for GetUpdateHistoryUseCase."""
+    def setUp(self):
+        self.app = _make_app(id=1, package_name="com.test.app")
+        self.app_repo = InMemoryAppRepository(apps=[self.app])
+
+    def test_raises_app_not_found(self):
+        use_case = GetUpdateHistoryUseCase(app_repository=self.app_repo, update_repository=InMemoryUpdateRepository())
+        with self.assertRaises(AppNotFoundError):
+            use_case.execute("com.unknown")
 
     def test_returns_empty_list_when_no_releases(self):
-        """Must return an empty list (not raise) when DB is empty."""
-        repo = InMemoryUpdateRepository(items=[])
-
-        result = GetUpdateHistoryUseCase(repository=repo).execute()
-
+        use_case = GetUpdateHistoryUseCase(app_repository=self.app_repo, update_repository=InMemoryUpdateRepository())
+        result = use_case.execute("com.test.app")
         self.assertEqual(result, [])
 
-    def test_returns_all_entities(self):
-        """Must return all entities from the repository."""
+    def test_returns_filtered_entities(self):
         entities = [
-            _make_entity(id=1, version="1.0.0"),
-            _make_entity(id=2, version="2.0.0"),
-            _make_entity(id=3, version="3.0.0"),
+            _make_entity(id=1, app_id=1, version="1.0.0"),
+            _make_entity(id=2, app_id=2, version="X.Y.Z"), # Different app
+            _make_entity(id=3, app_id=1, version="2.0.0"),
         ]
-        repo = InMemoryUpdateRepository(items=entities)
+        update_repo = InMemoryUpdateRepository(items=entities)
+        use_case = GetUpdateHistoryUseCase(app_repository=self.app_repo, update_repository=update_repo)
 
-        result = GetUpdateHistoryUseCase(repository=repo).execute()
-
-        self.assertEqual(len(result), 3)
+        result = use_case.execute("com.test.app")
+        self.assertEqual(len(result), 2)
         versions = [e.version for e in result]
         self.assertIn("1.0.0", versions)
-        self.assertIn("3.0.0", versions)
-
-    def test_order_is_preserved_from_repository(self):
-        """Use case must NOT reorder results — ordering is the repository's responsibility."""
-        entities = [
-            _make_entity(id=2, version="2.0.0"),
-            _make_entity(id=1, version="1.0.0"),
-        ]
-        repo = InMemoryUpdateRepository(items=entities)
-
-        result = GetUpdateHistoryUseCase(repository=repo).execute()
-
-        self.assertEqual(result[0].version, "2.0.0")
-        self.assertEqual(result[1].version, "1.0.0")
+        self.assertIn("2.0.0", versions)

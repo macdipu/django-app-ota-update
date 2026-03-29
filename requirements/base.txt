@@ -7,3 +7,5 @@ gunicorn
 whitenoise
 pytest
 pytest-django
+
+Pillow>=10.0.0

@@ -16,6 +16,7 @@ class OtaAdminSite(AdminSite):
     site_title = "OTA Admin"
     index_title = "Dashboard"
     site_url = None  # Remove "View Site" link from header
+    login_template = "dashboard/login.html"
 
     def login(self, request, extra_context=None):
         """Override login to support 'Remember Me' checkbox.
@@ -32,6 +33,21 @@ class OtaAdminSite(AdminSite):
                 request.session.set_expiry(0)  # Expire on browser close
 
         return response
+
+    def get_urls(self):
+        urls = super().get_urls()
+        from django.urls import path
+        from apps.ota.interfaces.ui import views as ui_views
+        
+        custom_urls = [
+            path("app/create/", self.admin_view(ui_views.app_create), name="ui_app_create"),
+            path("app/<int:pk>/", self.admin_view(ui_views.app_detail), name="ui_app_detail"),
+        ]
+        return custom_urls + urls
+
+    def index(self, request, extra_context=None):
+        from apps.ota.interfaces.ui.views import dashboard
+        return dashboard(request)
 
 
 # Singleton — imported by infrastructure/admin.py and config/urls.py

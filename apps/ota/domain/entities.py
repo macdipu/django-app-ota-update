@@ -10,6 +10,17 @@ from datetime import datetime
 
 
 @dataclass(frozen=True)
+class MobileAppEntity:
+    """Immutable domain entity representing a registered mobile application."""
+
+    id: int
+    name: str
+    package_name: str       # e.g. "com.example.merchant"
+    description: str
+    created_at: datetime
+
+
+@dataclass(frozen=True)
 class AppUpdateEntity:
     """Immutable domain entity representing a single APK release.
 
@@ -22,8 +33,9 @@ class AppUpdateEntity:
     """
 
     id: int
+    app_id: int                     # FK → MobileAppEntity.id
     version: str
-    apk_file_path: str          # e.g. "apks/app-v1.2.apk"  (storage-agnostic)
+    apk_file_path: str              # e.g. "apks/app-v1.2.apk"  (storage-agnostic)
     force_update: bool
     changelog: str
     min_supported_version: str

@@ -7,14 +7,16 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from apps.ota.infrastructure.admin_site import ota_admin_site  # Δ8: moved to infrastructure
 
 urlpatterns = [
-    # Root → Swagger docs
-    path("", lambda request: redirect("docs/"), name="root"),
+    # Root → Admin docs
+    path("", lambda request: redirect("admin/"), name="root"),
 
     # Custom OTA admin site
     path("admin/", ota_admin_site.urls),
 
     # OTA API
     path("api/", include("apps.ota.urls")),
+
+
 
     # Health checks
     path("health/", health_check, name="health"),
