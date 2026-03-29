@@ -48,10 +48,8 @@ class OtaAdminSite(AdminSite):
         return custom_urls + urls
 
     def index(self, request, extra_context=None):
-        # Use the standard AdminSite index view so the admin root (e.g. /admin/)
-        # displays the Django admin index. The site-level dashboard is exposed
-        # separately at /dashboard/ (configured in config/urls.py).
-        return super().index(request, extra_context=extra_context)
+        from apps.ota.interfaces.ui.views import dashboard
+        return dashboard(request)
 
 
 # Singleton — imported by infrastructure/admin.py and config/urls.py
