@@ -7,6 +7,7 @@ The custom AdminSite handles:
   - "Remember Me" login (30-day session extension)
 """
 from django.contrib.admin import AdminSite
+from django.shortcuts import render
 
 
 class OtaAdminSite(AdminSite):
@@ -48,8 +49,14 @@ class OtaAdminSite(AdminSite):
         return custom_urls + urls
 
     def index(self, request, extra_context=None):
-        from apps.ota.interfaces.ui.views import dashboard
-        return dashboard(request)
+        from apps.ota.infrastructure.orm_models import MobileApp
+
+        apps = MobileApp.objects.all()
+        context = {"apps": apps}
+        if extra_context:
+            context.update(extra_context)
+
+        return render(request, "dashboard/dashboard.html", context)
 
 
 # Singleton — imported by infrastructure/admin.py and config/urls.py

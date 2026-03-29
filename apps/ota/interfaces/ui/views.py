@@ -27,10 +27,10 @@ def app_delete(request, pk):
             app_name = app.name
             app.delete()
             messages.success(request, f"App '{app_name}' and its releases were deleted.")
-            return redirect("dashboard")
+            return redirect("ota_admin:index")
         else:
             messages.error(request, "Deletion cancelled — confirmation not checked.")
-            return redirect("dashboard")
+            return redirect("ota_admin:index")
 
     return render(request, "dashboard/confirm_delete_app.html", {"app": app})
 
@@ -53,17 +53,12 @@ def release_delete(request, app_pk, pk):
             version = release.version
             release.delete()
             messages.success(request, f"Release {version} deleted.")
-            return redirect("dashboard_app_detail", pk=app.pk)
+            return redirect("ota_admin:ui_app_detail", pk=app.pk)
         else:
             messages.error(request, "Deletion cancelled — confirmation not checked.")
-            return redirect("dashboard_app_detail", pk=app.pk)
+            return redirect("ota_admin:ui_app_detail", pk=app.pk)
 
     return render(request, "dashboard/confirm_delete_release.html", {"app": app, "release": release})
-
-def dashboard(request):
-    apps = MobileApp.objects.all()
-    return render(request, "dashboard/dashboard.html", {"apps": apps})
-
 
 @staff_member_required
 def app_create(request):
@@ -72,7 +67,7 @@ def app_create(request):
         if form.is_valid():
             app = form.save()
             messages.success(request, f"App '{app.name}' created successfully!")
-            return redirect("dashboard")
+            return redirect("ota_admin:index")
     else:
         form = MobileAppForm()
     
@@ -90,7 +85,7 @@ def app_detail(request, pk):
             update.app = app
             update.save()
             messages.success(request, f"Version {update.version} uploaded successfully!")
-            return redirect("dashboard_app_detail", pk=app.pk)
+            return redirect("ota_admin:ui_app_detail", pk=app.pk)
         else:
             messages.error(request, "Failed to upload APK. Please check the form below.")
     else:

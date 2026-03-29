@@ -7,7 +7,7 @@
 {% block content %}
 <div class="page-header">
     <h2>Mobile Apps</h2>
-    <a href="{% url 'dashboard_app_create' %}" class="btn btn-primary">
+    <a href="{% url 'ota_admin:ui_app_create' %}" class="btn btn-primary">
         <i class="ph ph-plus"></i> Create App
     </a>
 </div>
@@ -33,7 +33,7 @@
                     ⋯
                 </button>
                 <div class="more-dropdown" style="display:none;position:absolute;right:0;top:28px;z-index:50;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,0.08);min-width:160px;">
-                    <a href="{% url 'dashboard_app_delete' app.pk %}" class="more-item" style="display:block;padding:10px 12px;color:var(--danger);text-decoration:none;">Delete App</a>
+                    <a href="{% url 'ota_admin:ui_app_delete' app.pk %}" class="more-item" style="display:block;padding:10px 12px;color:var(--danger);text-decoration:none;">Delete App</a>
                 </div>
             </div>
 
@@ -43,10 +43,10 @@
             </div>
             
             <div class="app-card-actions" style="display:flex;align-items:center;gap:8px;">
-                <a href="{% url 'dashboard_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
+                <a href="{% url 'ota_admin:ui_app_detail' app.pk %}" class="btn btn-outline" style="flex:1;">
                     History
                 </a>
-                <a href="{% url 'dashboard_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
+                <a href="{% url 'ota_admin:ui_app_detail' app.pk %}#upload" class="btn btn-primary" style="flex:1;">
                     <i class="ph ph-upload-simple"></i> Upload
                 </a>
 
@@ -62,7 +62,7 @@
         </div>
         <h3>No Apps Found</h3>
         <p>You haven’t created any mobile apps yet. Get started by adding your first app project.</p>
-        <a href="{% url 'dashboard_app_create' %}" class="btn btn-primary">
+        <a href="{% url 'ota_admin:ui_app_create' %}" class="btn btn-primary">
             <i class="ph ph-plus"></i> Create App
         </a>
     </div>
