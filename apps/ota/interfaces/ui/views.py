@@ -64,6 +64,8 @@ def dashboard(request):
     apps = MobileApp.objects.all()
     return render(request, "dashboard/dashboard.html", {"apps": apps})
 
+
+@staff_member_required
 def app_create(request):
     if request.method == "POST":
         form = MobileAppForm(request.POST)

@@ -9,7 +9,7 @@
     <div class="card">
         <h2 style="margin-bottom: 24px; font-weight: 600;">App Details</h2>
         
-        <form method="POST" action="{% url 'ota_admin:ui_app_create' %}">
+        <form method="POST" action="{% url 'dashboard_app_create' %}">
             {% csrf_token %}
             
             <div class="form-group">
