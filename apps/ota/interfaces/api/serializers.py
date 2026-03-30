@@ -14,6 +14,7 @@ Usage in views:
     serializer = AppUpdateSerializer(entity, context={"request": request})
 """
 from django.conf import settings
+from apps.ota.infrastructure.storage import storage_service
 from rest_framework import serializers
 
 
@@ -34,18 +35,17 @@ class AppUpdateSerializer(serializers.Serializer):
         """Build an absolute APK download URL from the entity's storage path.
 
         Resolution strategy:
-          1. Use request.build_absolute_uri() if the request is in context
-             (preferred — correct even behind a reverse proxy).
-          2. Fall back to MEDIA_URL + path (useful in management commands/tests).
-          3. Return raw path if no MEDIA_URL configured.
+          1. Use the storage backend to resolve the URL (supports S3/MinIO).
+          2. If the storage URL is relative and a request is provided, build an
+             absolute URL for clients.
+          3. Fall back to MEDIA_URL + path for legacy behavior.
         """
         if not entity.apk_file_path:
             return ""
 
-        relative_url = settings.MEDIA_URL.rstrip("/") + "/" + entity.apk_file_path
-
         request = self.context.get("request")
-        if request is not None:
-            return request.build_absolute_uri(relative_url)
-
-        return relative_url
+        try:
+            return storage_service.url(entity.apk_file_path, request=request)
+        except Exception:
+            fallback = settings.MEDIA_URL.rstrip("/") + "/" + entity.apk_file_path
+            return request.build_absolute_uri(fallback) if request else fallback

@@ -8,6 +8,10 @@ Two models live here:
 """
 from django.core.exceptions import ValidationError
 from django.db import models
+from pathlib import Path
+from uuid import uuid4
+
+from django.utils.text import slugify
 
 
 MAX_APK_SIZE_MB = 500
@@ -27,6 +31,23 @@ def validate_apk_extension(file):
     """Ensure uploaded file has .apk extension."""
     if not file.name.lower().endswith(".apk"):
         raise ValidationError("Only .apk files are allowed.")
+
+
+def apk_upload_path(instance, filename: str) -> str:
+    """Generate a unique, collision-resistant upload path.
+
+    Structure: apks/<app-identifier>/<version>-<uuid>.apk
+    Falls back gracefully if app or version are missing.
+    """
+    ext = Path(filename).suffix or ".apk"
+    app_part = "app"
+    app = getattr(instance, "app", None)
+    if app:
+        # Prefer package_name to stay stable; fall back to name/pk.
+        app_part = slugify(app.package_name or app.name) or f"app-{app.pk or 'unknown'}"
+
+    version_part = slugify(getattr(instance, "version", "")) or "v"
+    return f"apks/{app_part}/{version_part}-{uuid4().hex}{ext}"
 
 
 class MobileApp(models.Model):
@@ -88,7 +109,7 @@ class AppUpdate(models.Model):
         help_text="Semantic version string, e.g. 1.2.0",
     )
     apk_file = models.FileField(
-        upload_to="apks/",
+        upload_to=apk_upload_path,
         validators=[validate_apk_size, validate_apk_extension],
         help_text="Upload the APK file (max 500 MB).",
     )
@@ -117,3 +138,5 @@ class AppUpdate(models.Model):
 
     def __str__(self):
         return f"{self.app.name} v{self.version}"
+
+    # upload path handled by module-level apk_upload_path

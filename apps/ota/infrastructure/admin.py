@@ -8,6 +8,7 @@ Features:
   - Drag-and-drop APK upload on the AppUpdate add/change form
 """
 import os
+from django.core.exceptions import SuspiciousFileOperation
 
 from django.contrib import admin as default_admin
 from django.utils.html import format_html
@@ -158,8 +159,13 @@ class AppUpdateAdmin(default_admin.ModelAdmin):
     @default_admin.display(description="Download APK")
     def apk_download_link(self, obj):
         if obj.apk_file:
-            size_mb = os.path.getsize(obj.apk_file.path) / (1024 * 1024) if obj.apk_file and hasattr(obj.apk_file, 'path') else 0
-            size_str = f" ({size_mb:.1f} MB)" if size_mb else ""
+            size_str = ""
+            try:
+                size_mb = obj.apk_file.size / (1024 * 1024)
+                size_str = f" ({size_mb:.1f} MB)" if size_mb else ""
+            except (FileNotFoundError, SuspiciousFileOperation, OSError):
+                # Size lookup can fail on remote storage or missing files; skip display in that case.
+                size_str = ""
             return format_html(
                 '<a href="{}" target="_blank" download style="color:#06b6d4;font-weight:500;">⬇ Download{}</a>',
                 obj.apk_file.url,
