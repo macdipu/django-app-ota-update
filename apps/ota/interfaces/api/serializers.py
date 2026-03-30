@@ -14,6 +14,7 @@ Usage in views:
     serializer = AppUpdateSerializer(entity, context={"request": request})
 """
 from django.conf import settings
+from django.urls import reverse
 from apps.ota.infrastructure.storage import storage_service
 from rest_framework import serializers
 
@@ -24,6 +25,7 @@ class AppUpdateSerializer(serializers.Serializer):
     Works for both a single entity and a list (many=True).
     """
 
+    id = serializers.IntegerField(read_only=True)
     version = serializers.CharField(read_only=True)
     apk_url = serializers.SerializerMethodField()
     force_update = serializers.BooleanField(read_only=True)
@@ -44,6 +46,13 @@ class AppUpdateSerializer(serializers.Serializer):
             return ""
 
         request = self.context.get("request")
+
+        if entity.id:
+            download_path = reverse("ota-download", args=[entity.id])
+            if request:
+                return request.build_absolute_uri(download_path)
+            return download_path
+
         try:
             return storage_service.url(entity.apk_file_path, request=request)
         except Exception:

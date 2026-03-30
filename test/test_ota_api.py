@@ -53,6 +53,7 @@ class LatestUpdateViewTests(TestCase):
         self.assertTrue(data["force_update"])
         self.assertIn("apk_url", data)
         self.assertIn("changelog", data)
+        self.assertIn("/api/download/", data["apk_url"])
 
     def test_apk_url_is_absolute(self):
         AppUpdate.objects.create(
@@ -63,6 +64,28 @@ class LatestUpdateViewTests(TestCase):
         response = self.client.get("/api/update/?package=com.test.app")
         data = response.json()
         self.assertTrue(data["apk_url"].startswith("http"))
+
+
+class DownloadReleaseViewTests(TestCase):
+    def setUp(self):
+        self.app = MobileApp.objects.create(name="Test App", package_name="com.test.app")
+        self.release = AppUpdate.objects.create(app=self.app, version="1.0.0", apk_file=make_apk("v1.apk"))
+
+    def test_returns_404_when_release_missing(self):
+        url = reverse("ota-download", args=[9999])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_streams_apk_via_django(self):
+        url = reverse("ota-download", args=[self.release.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/vnd.android.package-archive")
+        content_disposition = response["Content-Disposition"]
+        self.assertIn("attachment; filename=", content_disposition)
+        self.assertTrue(content_disposition.endswith(".apk\""))
+        body = b"".join(response.streaming_content)
+        self.assertEqual(body, b"\x00" * 1024)
 
 
 class UpdateHistoryViewTests(TestCase):

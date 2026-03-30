@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.conf import settings
 from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
-from apps.ota.infrastructure.storage import storage_service
+from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 
 
@@ -140,10 +140,8 @@ def app_detail(request, pk):
     storage_backend = getattr(settings, "DEFAULT_FILE_STORAGE", "django.core.files.storage.FileSystemStorage")
 
     for rel in updates:
-        try:
-            rel.download_url = storage_service.url(rel.apk_file.name, request=request)
-        except Exception:
-            rel.download_url = rel.apk_file.url
+        download_path = reverse("ota-download", args=[rel.pk])
+        rel.download_url = request.build_absolute_uri(download_path)
     
     return render(request, "dashboard/app_detail.html", {
         "app": app,

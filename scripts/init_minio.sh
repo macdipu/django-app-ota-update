@@ -8,14 +8,20 @@ done
 
 echo "✅ MinIO is ready"
 
-# Use python to set up bucket and policy
+# Use python to create bucket only (no public policy)
 python3 -c "
 import boto3
+from botocore.exceptions import ClientError
+
+BUCKET = 'ota-media'
 client = boto3.client('s3', endpoint_url='http://minio:9000', aws_access_key_id='minioadmin', aws_secret_access_key='minioadmin')
-client.create_bucket(Bucket='ota-media')
-policy = {'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Principal': {'AWS': '*'}, 'Action': 's3:GetObject', 'Resource': 'arn:aws:s3:::ota-media/*'}]}
-client.put_bucket_policy(Bucket='ota-media', Policy=str(policy).replace(\"'\", '\"'))
-print('Bucket policy set successfully')
+
+try:
+    client.head_bucket(Bucket=BUCKET)
+    print(f'Bucket "{BUCKET}" already exists')
+except ClientError:
+    client.create_bucket(Bucket=BUCKET)
+    print(f'Bucket "{BUCKET}" created (private by default)')
 "
 
-echo "✅ Bucket ready & public"
+echo "✅ Bucket ready (private)"

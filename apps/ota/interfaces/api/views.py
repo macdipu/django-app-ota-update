@@ -13,6 +13,9 @@ Dependency flow:
     View → di.build_*_use_case() → UseCase → Repository → Domain Entity
            ↑ only concrete reference is the DI factory
 """
+from pathlib import Path
+
+from django.http import FileResponse, Http404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -23,6 +26,7 @@ from apps.ota.infrastructure.di import (
     build_latest_update_use_case,
     build_update_history_use_case,
 )
+from apps.ota.infrastructure.orm_models import AppUpdate
 from apps.ota.interfaces.api.serializers import AppUpdateSerializer
 
 
@@ -86,3 +90,44 @@ def update_history(request):
 
     serializer = AppUpdateSerializer(entities, many=True, context={"request": request})
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def download_release(request, release_id: int):
+    """Stream a private APK through Django so MinIO/S3 stays private."""
+
+    try:
+        release = AppUpdate.objects.get(pk=release_id)
+    except AppUpdate.DoesNotExist as exc:
+        raise Http404("Release not found.") from exc
+
+    if not release.apk_file:
+        raise Http404("APK file missing.")
+
+    storage = release.apk_file.storage
+    name = release.apk_file.name
+
+    try:
+        file_obj = storage.open(name, mode="rb")
+    except FileNotFoundError as exc:
+        raise Http404("APK file missing.") from exc
+    except Exception as exc:  # pragma: no cover - backend-specific errors
+        raise Http404("Unable to open APK file.") from exc
+
+    response = FileResponse(
+        file_obj,
+        as_attachment=True,
+        filename=Path(name).name,
+        content_type="application/vnd.android.package-archive",
+    )
+
+    try:
+        response["Content-Length"] = storage.size(name)
+    except Exception:
+        # Best-effort; size may not be available for streaming backends
+        pass
+
+    return response
+
+
