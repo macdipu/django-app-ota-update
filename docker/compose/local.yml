@@ -19,7 +19,7 @@ services:
   minio:
     image: minio/minio:RELEASE.2024-10-13T13-34-11Z
     entrypoint: ["sh"]
-    command: ["-c", 'minio server /data --console-address :9001 & MINIO_PID=$! ; sleep 5 ; mc alias set local http://localhost:9000 minioadmin minioadmin ; mc mb local/ota-media 2>/dev/null || true ; mc anonymous set public local/ota-media ; wait $MINIO_PID']
+    command: ["-c", 'minio server /data --console-address :9001 & MINIO_PID=$$! ; sleep 5 ; mc alias set local http://localhost:9000 minioadmin minioadmin ; mc mb local/ota-media 2>/dev/null || true ; mc anonymous set public local/ota-media ; wait $$MINIO_PID']
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin
