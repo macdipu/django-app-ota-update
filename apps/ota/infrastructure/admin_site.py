@@ -45,6 +45,8 @@ class OtaAdminSite(AdminSite):
             path("app/<int:pk>/", self.admin_view(ui_views.app_detail), name="ui_app_detail"),
             path("app/<int:pk>/delete/", self.admin_view(ui_views.app_delete), name="ui_app_delete"),
             path("app/<int:app_pk>/release/<int:pk>/delete/", self.admin_view(ui_views.release_delete), name="ui_release_delete"),
+            path("app/<int:app_pk>/release/<int:pk>/pin/", self.admin_view(ui_views.release_pin), name="ui_release_pin"),
+            path("app/<int:app_pk>/release/bulk-delete/", self.admin_view(ui_views.release_bulk_delete), name="ui_release_bulk_delete"),
         ]
         return custom_urls + urls
 

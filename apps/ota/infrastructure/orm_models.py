@@ -8,6 +8,7 @@ Two models live here:
 """
 from django.core.exceptions import ValidationError
 from django.db import models
+import hashlib
 from pathlib import Path
 from uuid import uuid4
 
@@ -113,6 +114,15 @@ class AppUpdate(models.Model):
         validators=[validate_apk_size, validate_apk_extension],
         help_text="Upload the APK file (max 500 MB).",
     )
+    checksum_sha256 = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="Integrity checksum of the uploaded APK (SHA-256).",
+    )
+    is_pinned = models.BooleanField(
+        default=False,
+        help_text="If True, treat this release as pinned/promoted regardless of recency.",
+    )
     force_update = models.BooleanField(
         default=False,
         help_text="If True, the Flutter app must update before continuing.",
@@ -138,5 +148,14 @@ class AppUpdate(models.Model):
 
     def __str__(self):
         return f"{self.app.name} v{self.version}"
+
+    def save(self, *args, **kwargs):
+        # Compute checksum once when file present and checksum missing.
+        if self.apk_file and not self.checksum_sha256:
+            hasher = hashlib.sha256()
+            for chunk in self.apk_file.chunks():
+                hasher.update(chunk)
+            self.checksum_sha256 = hasher.hexdigest()
+        super().save(*args, **kwargs)
 
     # upload path handled by module-level apk_upload_path

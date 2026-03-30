@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db.models import Q
+from django.conf import settings
 from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
 from django.contrib.admin.views.decorators import staff_member_required
@@ -59,6 +61,37 @@ def release_delete(request, app_pk, pk):
 
     return render(request, "dashboard/confirm_delete_release.html", {"app": app, "release": release})
 
+
+@staff_member_required
+def release_bulk_delete(request, app_pk):
+    app = get_object_or_404(MobileApp, pk=app_pk)
+    if request.method != "POST":
+        return redirect("ota_admin:ui_app_detail", pk=app.pk)
+
+    ids = request.POST.getlist("release_ids")
+    releases = app.updates.filter(pk__in=ids)
+    count = releases.count()
+    for rel in releases:
+        _delete_release_file(rel.apk_file)
+    releases.delete()
+    if count:
+        messages.success(request, f"Deleted {count} release(s).")
+    else:
+        messages.info(request, "No releases selected for deletion.")
+    return redirect("ota_admin:ui_app_detail", pk=app.pk)
+
+
+@staff_member_required
+def release_pin(request, app_pk, pk):
+    app = get_object_or_404(MobileApp, pk=app_pk)
+    release = get_object_or_404(AppUpdate, pk=pk, app=app)
+    if request.method == "POST":
+        release.is_pinned = not release.is_pinned
+        release.save(update_fields=["is_pinned"])
+        state = "pinned" if release.is_pinned else "unpinned"
+        messages.success(request, f"Release {release.version} {state}.")
+    return redirect("ota_admin:ui_app_detail", pk=app.pk)
+
 @staff_member_required
 def app_create(request):
     if request.method == "POST":
@@ -83,17 +116,34 @@ def app_detail(request, pk):
             update = form.save(commit=False)
             update.app = app
             update.save()
-            messages.success(request, f"Version {update.version} uploaded successfully!")
+            messages.success(request, f"Version {update.version} uploaded successfully! Storage key: {update.apk_file.name}")
             return redirect("ota_admin:ui_app_detail", pk=app.pk)
         else:
             messages.error(request, "Failed to upload APK. Please check the form below.")
     else:
         form = AppUpdateForm()
         
+    query = request.GET.get("q", "").strip()
+    force_filter = request.GET.get("force", "")
+
     updates = app.updates.all()
+    if query:
+        updates = updates.filter(Q(version__icontains=query) | Q(changelog__icontains=query))
+    if force_filter == "1":
+        updates = updates.filter(force_update=True)
+
+    updates = updates.order_by("-is_pinned", "-created_at")
+    latest = app.updates.order_by("-created_at").first()
+    last_upload_ts = latest.created_at if latest else None
+    storage_backend = getattr(settings, "DEFAULT_FILE_STORAGE", "django.core.files.storage.FileSystemStorage")
     
     return render(request, "dashboard/app_detail.html", {
         "app": app,
         "form": form,
         "updates": updates,
+        "latest": latest,
+        "last_upload_ts": last_upload_ts,
+        "query": query,
+        "force_filter": force_filter,
+        "storage_backend": storage_backend,
     })

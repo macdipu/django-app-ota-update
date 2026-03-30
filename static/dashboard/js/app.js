@@ -46,10 +46,23 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
+        // Keyboard accessibility
+        dropzone.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                input.click();
+            }
+        });
+
+        // Highlight dropzone on validation errors
+        if (dropzone.parentElement.querySelector('.dropzone-error')) {
+            dropzone.classList.add('dropzone-error-state');
+        }
+
         function updateFileInfo(file) {
             defaultText.textContent = file.name;
             const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
-            hintText.innerHTML = `<span style="color:var(--success)">File ready to upload (${sizeInMb} MB)</span>`;
+            hintText.innerHTML = `<span style="color:var(--success)">File ready to upload (${sizeInMb} MB) — max 500 MB</span>`;
         }
     });
 });
@@ -75,6 +88,48 @@ document.addEventListener("DOMContentLoaded", function () {
     // Close dropdown when clicking outside
     document.addEventListener('click', function (e) {
         document.querySelectorAll('.more-dropdown').forEach(d => d.style.display = 'none');
+    });
+});
+
+// Select-all checkboxes
+document.addEventListener("DOMContentLoaded", function () {
+    const selectAll = document.getElementById('select-all');
+    if (!selectAll) return;
+    const checkboxes = document.querySelectorAll('.release-checkbox');
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => { cb.checked = selectAll.checked; });
+    });
+});
+
+// Copy buttons (checksum and URL)
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const val = btn.getAttribute('data-copy');
+            try {
+                await navigator.clipboard.writeText(val);
+                btn.textContent = 'Copied';
+                setTimeout(() => btn.textContent = 'Copy', 1500);
+            } catch (err) {
+                btn.textContent = 'Failed';
+                setTimeout(() => btn.textContent = 'Copy', 1500);
+            }
+        });
+    });
+});
+
+// Simple upload progress indicator (non-XHR): show spinner on submit
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector('#upload form');
+    if (!form) return;
+    const submitBtn = document.getElementById('upload-submit');
+    const progress = document.getElementById('upload-progress');
+    form.addEventListener('submit', () => {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading…';
+        }
+        if (progress) progress.style.display = 'inline';
     });
 });
 
