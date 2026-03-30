@@ -112,7 +112,7 @@ MINIO_ENABLED = env_bool("MINIO_ENABLED", False)
 
 if MINIO_ENABLED:
     INSTALLED_APPS += ["storages"]
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    DEFAULT_FILE_STORAGE = "apps.ota.infrastructure.storage.PublicRewritingS3Boto3Storage"
 
     AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "ota-media")
     AWS_S3_ENDPOINT_URL = os.getenv("MINIO_ENDPOINT_URL", "http://localhost:9000").rstrip("/")
@@ -122,8 +122,12 @@ if MINIO_ENABLED:
     AWS_S3_ADDRESSING_STYLE = os.getenv("MINIO_ADDRESSING_STYLE", "path")
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_USE_SSL = env_bool("MINIO_USE_SSL", False)
+    AWS_S3_QUERYSTRING_AUTH = False
 
     MEDIA_URL = os.getenv("MEDIA_URL", f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/")
+
+# Optional override for public-facing media host (e.g., when storage endpoint is not directly reachable by clients)
+MEDIA_PUBLIC_BASE_URL = os.getenv("MEDIA_PUBLIC_BASE_URL", "").rstrip("/")
 
 # ---------------------------------------------------------------------------
 # Default primary key

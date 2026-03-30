@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.conf import settings
 from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
+from apps.ota.infrastructure.storage import storage_service
 from django.contrib.admin.views.decorators import staff_member_required
 
 
@@ -133,9 +134,16 @@ def app_detail(request, pk):
         updates = updates.filter(force_update=True)
 
     updates = updates.order_by("-is_pinned", "-created_at")
+    updates = list(updates)
     latest = app.updates.order_by("-created_at").first()
     last_upload_ts = latest.created_at if latest else None
     storage_backend = getattr(settings, "DEFAULT_FILE_STORAGE", "django.core.files.storage.FileSystemStorage")
+
+    for rel in updates:
+        try:
+            rel.download_url = storage_service.url(rel.apk_file.name, request=request)
+        except Exception:
+            rel.download_url = rel.apk_file.url
     
     return render(request, "dashboard/app_detail.html", {
         "app": app,

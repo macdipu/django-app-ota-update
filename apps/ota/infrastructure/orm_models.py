@@ -48,7 +48,7 @@ def apk_upload_path(instance, filename: str) -> str:
         app_part = slugify(app.package_name or app.name) or f"app-{app.pk or 'unknown'}"
 
     version_part = slugify(getattr(instance, "version", "")) or "v"
-    return f"apks/{app_part}/{version_part}-{uuid4().hex}{ext}"
+    return f"apks/{app_part}/{app_part}-{version_part}{ext}"
 
 
 class MobileApp(models.Model):

@@ -11,18 +11,32 @@ Admins upload APK releases via Django Admin. A Flutter app polls a public REST e
 ```
 .
 ├── apps/
-│   └── ota/                  # OTA update feature
-│       ├── admin.py          # Admin panel config
-│       ├── models.py         # AppUpdate model
-│       ├── serializers.py    # DRF serializer
-│       ├── views.py          # API views
-│       └── urls.py           # URL routes
-├── config/
+│   └── ota/                  # OTA update feature (Clean Architecture)
+│       ├── domain/           # Domain layer (entities, exceptions, repositories)
+│       │   ├── entities.py   # Domain entities
+│       │   ├── exceptions.py # Domain exceptions
+│       │   └── repositories.py # Abstract repositories
+│       ├── infrastructure/   # Infrastructure layer (concrete implementations)
+│       │   ├── admin.py      # Admin panel config
+│       │   ├── di.py         # Dependency injection factory
+│       │   ├── orm_models.py # Django ORM models
+│       │   ├── repositories.py # Concrete repository implementations
+│       │   ├── storage.py    # File storage backend
+│       │   └── migrations/   # DB migrations
+│       ├── interfaces/       # Interfaces layer (adapters)
+│       │   ├── api/          # REST API adapters
+│       │   │   ├── serializers.py # DRF serializers
+│       │   │   └── views.py  # API views (controllers)
+│       │   └── ui/           # UI adapters (if any)
+│       └── use_cases/        # Use cases (application logic)
+│           ├── get_latest_update.py
+│           └── get_update_history.py
+├── config/                   # Django project config
 │   ├── settings.py
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
-├── core/                     # Utilities (health checks, logging, exceptions)
+├── core/                     # Shared utilities (health checks, logging, exceptions)
 ├── test/                     # Tests
 │   └── test_ota_api.py
 ├── media/                    # APK uploads (auto-created, git-ignored)
@@ -114,7 +128,7 @@ make down      # Stop containers
 
 Notes (local compose):
 - Exposes Django on `http://localhost:8003`, MinIO API on `http://localhost:9000`, console on `http://localhost:9001` (credentials: `minioadmin` / `minioadmin`).
-- MinIO bucket `ota-media` is auto-created by `minio-init`. Toggle storage via `MINIO_ENABLED` envs in `docker/compose/local.yml`.
+- MinIO bucket `ota-media` is auto-created by the storage backend on first use. Toggle storage via `MINIO_ENABLED` envs in `docker/compose/local.yml`.
 
 ---
 
@@ -122,7 +136,10 @@ Notes (local compose):
 
 ### `GET /api/update/`
 
-Returns the latest APK release.
+Returns the latest APK release for the specified app.
+
+**Query Parameters:**
+- `package` (string, required): Android package name of the app, e.g., `com.example.merchant`.
 
 **Response 200:**
 ```json
@@ -136,10 +153,17 @@ Returns the latest APK release.
 }
 ```
 
-**Response 404** (no releases yet):
+**Response 400** (missing package):
 ```json
 {
-    "detail": "No updates available."
+    "detail": "Missing required query parameter: 'package'."
+}
+```
+
+**Response 404** (app not found or no releases):
+```json
+{
+    "detail": "App not found."  // or "No updates available."
 }
 ```
 
@@ -147,7 +171,10 @@ Returns the latest APK release.
 
 ### `GET /api/updates/`
 
-Returns full release history, newest first.
+Returns full release history for the specified app, newest first.
+
+**Query Parameters:**
+- `package` (string, required): Android package name of the app, e.g., `com.example.merchant`.
 
 **Response 200:**
 ```json
@@ -155,6 +182,20 @@ Returns full release history, newest first.
     { "version": "1.2.0", "apk_url": "...", "force_update": true, ... },
     { "version": "1.1.0", "apk_url": "...", "force_update": false, ... }
 ]
+```
+
+**Response 400** (missing package):
+```json
+{
+    "detail": "Missing required query parameter: 'package'."
+}
+```
+
+**Response 404** (app not found):
+```json
+{
+    "detail": "App not found."
+}
 ```
 
 ---

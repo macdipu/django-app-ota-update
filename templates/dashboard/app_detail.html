@@ -152,13 +152,12 @@
                                 </td>
                                 <td>
                                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                                        <a href="{{ release.apk_file.url }}" class="btn btn-outline btn-sm" title="Download">
+                                        <a href="{{ release.download_url }}" class="btn btn-outline btn-sm" title="Download">
                                             <i class="ph ph-download-simple"></i>
                                         </a>
-                                        <span style="font-size:11px;color:var(--text-muted);">Link may expire if private storage</span>
-                                        <button type="button" class="btn btn-outline btn-sm copy-btn" data-copy="{{ release.apk_file.url }}" title="Copy download URL">
-                                            <i class="ph ph-copy"></i>
-                                        </button>
+                                         <button type="button" class="btn btn-outline btn-sm copy-btn" data-copy="{{ release.download_url }}" title="Copy download URL">
+                                             <i class="ph ph-copy"></i>
+                                         </button>
                                         <button type="submit" formaction="{% url 'ota_admin:ui_release_pin' app.pk release.pk %}" formmethod="post" class="btn btn-outline btn-sm">
                                             {% if release.is_pinned %}Unpin{% else %}Pin{% endif %}
                                         </button>
