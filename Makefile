@@ -15,25 +15,25 @@ rebuild:
 	$(COMPOSE) build --no-cache
 
 migrate:
-	$(COMPOSE) run --rm web python manage.py migrate --noinput
+	$(COMPOSE) run --rm app python manage.py migrate --noinput
 
 makemigrations:
-	$(COMPOSE) run --rm web python manage.py makemigrations
+	$(COMPOSE) run --rm app python manage.py makemigrations
 
 shell:
-	$(COMPOSE) run --rm web python manage.py shell
+	$(COMPOSE) run --rm app python manage.py shell
 
 logs:
 	$(COMPOSE) logs -f
 
 test:
-	$(COMPOSE) run --rm web pytest
+	$(COMPOSE) run --rm app pytest
 
 superuser:
-	$(COMPOSE) run --rm web python manage.py createsuperuser
+	$(COMPOSE) run --rm app python manage.py createsuperuser
 
 collectstatic:
-	$(COMPOSE) run --rm web python manage.py collectstatic --noinput
+	$(COMPOSE) run --rm app python manage.py collectstatic --noinput
 
 clean:
 	$(COMPOSE) down -v
