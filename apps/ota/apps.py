@@ -9,3 +9,8 @@ class OtaConfig(AppConfig):
     def ready(self):
         """Import infrastructure admin to register models with ota_admin_site."""
         import apps.ota.infrastructure.admin  # noqa: F401
+        try:
+            from django.core.files.storage import default_storage
+            _ = default_storage
+        except:
+            pass
