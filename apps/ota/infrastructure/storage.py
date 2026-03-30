@@ -141,26 +141,26 @@ try:
                 self.connection.head_bucket(Bucket=self.bucket_name)
             except self.connection.exceptions.NoSuchBucket:
                 self.connection.create_bucket(Bucket=self.bucket_name)
-                # Set public read policy
-                try:
-                    self.connection.put_bucket_policy(
-                        Bucket=self.bucket_name,
-                        Policy=json.dumps({
-                            "Version": "2012-10-17",
-                            "Statement": [
-                                {
-                                    "Effect": "Allow",
-                                    "Principal": "*",
-                                    "Action": "s3:GetObject",
-                                    "Resource": f"arn:aws:s3:::{self.bucket_name}/*"
-                                }
-                            ]
-                        })
-                    )
-                except Exception:
-                    pass
             except Exception:
                 # Ignore other errors, like permissions
+                pass
+            # Always attempt to set the public read policy
+            try:
+                self.connection.put_bucket_policy(
+                    Bucket=self.bucket_name,
+                    Policy=json.dumps({
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Principal": "*",
+                                "Action": "s3:GetObject",
+                                "Resource": f"arn:aws:s3:::{self.bucket_name}/*"
+                            }
+                        ]
+                    })
+                )
+            except Exception:
                 pass
 
         def url(self, name, parameters=None, expire=None, http_method=None):

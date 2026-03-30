@@ -59,7 +59,6 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
 
-      MINIO_ENABLED: "True"
       MINIO_ENDPOINT_URL: http://minio:9000
       MEDIA_PUBLIC_BASE_URL: "http://localhost:9000"
       MINIO_BUCKET_NAME: ota-media
