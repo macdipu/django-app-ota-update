@@ -1,3 +1,4 @@
+name: ota-services
 services:
 
   db:
