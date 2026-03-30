@@ -111,7 +111,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 btn.textContent = 'Copied';
                 setTimeout(() => btn.textContent = 'Copy', 1500);
             } catch (err) {
-                btn.textContent = 'Failed';
+                // Fallback for browsers that don't support clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = val;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    btn.textContent = 'Copied';
+                } catch (fallbackErr) {
+                    btn.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
                 setTimeout(() => btn.textContent = 'Copy', 1500);
             }
         });
@@ -132,4 +146,3 @@ document.addEventListener("DOMContentLoaded", function () {
         if (progress) progress.style.display = 'inline';
     });
 });
-

@@ -11,6 +11,8 @@ from django.db import models
 import hashlib
 from pathlib import Path
 from uuid import uuid4
+import random
+import string
 
 from django.utils.text import slugify
 
@@ -37,18 +39,21 @@ def validate_apk_extension(file):
 def apk_upload_path(instance, filename: str) -> str:
     """Generate a unique, collision-resistant upload path.
 
-    Structure: apks/<app-identifier>/<version>-<uuid>.apk
+    Structure: apks/<project_name>/<project_name>_<version>_<unique>.apk
+    Where unique is 6 random letters.
     Falls back gracefully if app or version are missing.
     """
     ext = Path(filename).suffix or ".apk"
-    app_part = "app"
+    project_name = "app"
     app = getattr(instance, "app", None)
     if app:
-        # Prefer package_name to stay stable; fall back to name/pk.
-        app_part = slugify(app.package_name or app.name) or f"app-{app.pk or 'unknown'}"
+        # Use package_name or name, replace dots and spaces with underscores
+        project_name = (app.package_name or app.name).replace('.', '_').replace(' ', '_') or f"app_{app.pk or 'unknown'}"
 
-    version_part = slugify(getattr(instance, "version", "")) or "v"
-    return f"apks/{app_part}/{app_part}-{version_part}{ext}"
+    version_part = (slugify(getattr(instance, "version", "")) or "v").replace('-', '_')
+    unique = ''.join(random.choices(string.ascii_letters, k=6))
+    file_name = f"{project_name}_{version_part}_{unique}{ext}"
+    return f"apks/{project_name}/{file_name}"
 
 
 class MobileApp(models.Model):
