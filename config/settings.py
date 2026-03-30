@@ -126,6 +126,12 @@ MEDIA_URL = os.getenv("MEDIA_URL", f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_N
 # Optional override for public-facing media host (e.g., when storage endpoint is not directly reachable by clients)
 MEDIA_PUBLIC_BASE_URL = os.getenv("MEDIA_PUBLIC_BASE_URL", "").rstrip("/")
 
+# Django 5 uses STORAGES; ensure media files go to MinIO instead of local FS.
+STORAGES = {
+    "default": {"BACKEND": "apps.ota.infrastructure.storage.PublicRewritingS3Boto3Storage"},
+    "staticfiles": {"BACKEND": STATICFILES_STORAGE},
+}
+
 # ---------------------------------------------------------------------------
 # Default primary key
 # ---------------------------------------------------------------------------
