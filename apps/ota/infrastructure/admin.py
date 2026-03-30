@@ -15,6 +15,7 @@ from django.utils.html import format_html
 
 from apps.ota.infrastructure.admin_site import ota_admin_site
 from apps.ota.infrastructure.orm_models import AppUpdate, MobileApp
+from apps.ota.infrastructure.storage import storage_service
 
 
 # ── Inline: App Releases inside MobileApp ───────────────────────────────────
@@ -166,9 +167,13 @@ class AppUpdateAdmin(default_admin.ModelAdmin):
             except (FileNotFoundError, SuspiciousFileOperation, OSError):
                 # Size lookup can fail on remote storage or missing files; skip display in that case.
                 size_str = ""
+            try:
+                download_url = storage_service.url(obj.apk_file.name)
+            except Exception:
+                download_url = obj.apk_file.url
             return format_html(
                 '<a href="{}" target="_blank" download style="color:#06b6d4;font-weight:500;">⬇ Download{}</a>',
-                obj.apk_file.url,
+                download_url,
                 size_str,
             )
         return "—"
