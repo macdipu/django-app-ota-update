@@ -74,6 +74,21 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+### Media storage (local vs MinIO)
+
+- Default: uploaded APKs are stored on local disk under `media/apks/` and served via `MEDIA_URL`.
+- To use MinIO (or any S3-compatible storage), set these env vars (see `.env.example`):
+  ```bash
+  MINIO_ENABLED=True
+  MINIO_ENDPOINT_URL=http://localhost:9000   # or https://minio.yourdomain.com
+  MINIO_BUCKET_NAME=ota-media
+  MINIO_ACCESS_KEY_ID=...
+  MINIO_SECRET_KEY=...
+  MINIO_REGION_NAME=us-east-1
+  MINIO_USE_SSL=False
+  ```
+- No model changes are required; the `FileField` writes to the configured storage backend.
+
 ### URLs
 
 | URL | Description |
@@ -96,6 +111,10 @@ make superuser # Create admin user
 make test      # Run tests
 make down      # Stop containers
 ```
+
+Notes (local compose):
+- Exposes Django on `http://localhost:8003`, MinIO API on `http://localhost:9000`, console on `http://localhost:9001` (credentials: `minioadmin` / `minioadmin`).
+- MinIO bucket `ota-media` is auto-created by `minio-init`. Toggle storage via `MINIO_ENABLED` envs in `docker/compose/local.yml`.
 
 ---
 
@@ -157,7 +176,7 @@ The key is available in `settings.OTA_API_KEY`. Wire it into a custom DRF permis
 | Field | Type | Description |
 |---|---|---|
 | `version` | CharField (unique) | Semver string, e.g. `1.2.0` |
-| `apk_file` | FileField | Uploaded to `media/apks/`. Max 200 MB |
+| `apk_file` | FileField | Uploaded to `media/apks/` (or MinIO bucket). Max 500 MB |
 | `force_update` | BooleanField | If true, Flutter app must update |
 | `changelog` | TextField | Release notes (optional) |
 | `min_supported_version` | CharField | Minimum upgradeable version (optional) |

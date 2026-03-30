@@ -3,9 +3,16 @@ from django.contrib import messages
 from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
 from django.contrib.admin.views.decorators import staff_member_required
-import os
 
-from django.conf import settings
+
+def _delete_release_file(file_field):
+    if not file_field:
+        return
+    try:
+        file_field.storage.delete(file_field.name)
+    except FileNotFoundError:
+        # Ignore missing local files to match previous behavior
+        pass
 
 
 @staff_member_required
@@ -18,11 +25,7 @@ def app_delete(request, pk):
         if request.POST.get("confirm") == "yes":
             # Remove APK files for all releases belonging to this app
             for rel in app.updates.all():
-                try:
-                    if rel.apk_file and hasattr(rel.apk_file, 'path'):
-                        os.remove(rel.apk_file.path)
-                except FileNotFoundError:
-                    pass
+                _delete_release_file(rel.apk_file)
 
             app_name = app.name
             app.delete()
@@ -44,11 +47,7 @@ def release_delete(request, app_pk, pk):
     if request.method == "POST":
         if request.POST.get("confirm") == "yes":
             # Remove APK file from storage
-            try:
-                if release.apk_file and hasattr(release.apk_file, 'path'):
-                    os.remove(release.apk_file.path)
-            except FileNotFoundError:
-                pass
+            _delete_release_file(release.apk_file)
 
             version = release.version
             release.delete()

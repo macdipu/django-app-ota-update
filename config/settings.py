@@ -4,6 +4,11 @@ from core.logging import LOGGING
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def env_bool(key: str, default: bool = False) -> bool:
+    """Parse common truthy strings from environment variables."""
+    return os.getenv(key, str(default)).lower() in {"1", "true", "t", "yes", "y", "on"}
+
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-secret-change-in-production")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
@@ -101,6 +106,24 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Optional: use MinIO (or any S3-compatible) for media storage
+MINIO_ENABLED = env_bool("MINIO_ENABLED", False)
+
+if MINIO_ENABLED:
+    INSTALLED_APPS += ["storages"]
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+    AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "ota-media")
+    AWS_S3_ENDPOINT_URL = os.getenv("MINIO_ENDPOINT_URL", "http://localhost:9000").rstrip("/")
+    AWS_ACCESS_KEY_ID = os.getenv("MINIO_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY = os.getenv("MINIO_SECRET_KEY", "")
+    AWS_S3_REGION_NAME = os.getenv("MINIO_REGION_NAME", "us-east-1")
+    AWS_S3_ADDRESSING_STYLE = os.getenv("MINIO_ADDRESSING_STYLE", "path")
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_USE_SSL = env_bool("MINIO_USE_SSL", False)
+
+    MEDIA_URL = os.getenv("MEDIA_URL", f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/")
 
 # ---------------------------------------------------------------------------
 # Default primary key

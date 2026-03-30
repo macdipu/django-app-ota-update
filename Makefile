@@ -1,9 +1,12 @@
 COMPOSE = docker compose -f docker/compose/local.yml
 
-.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean
+.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean deps
 
 up:
 	$(COMPOSE) up --build
+
+deps:
+	$(COMPOSE) up -d db minio
 
 down:
 	$(COMPOSE) down
@@ -12,7 +15,7 @@ rebuild:
 	$(COMPOSE) build --no-cache
 
 migrate:
-	$(COMPOSE) run --rm web python manage.py migrate
+	$(COMPOSE) run --rm web python manage.py migrate --noinput
 
 makemigrations:
 	$(COMPOSE) run --rm web python manage.py makemigrations

@@ -31,6 +31,6 @@ urlpatterns = [
     path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
+# Serve media files in development when using local storage
+if settings.DEBUG and not getattr(settings, "MINIO_ENABLED", False):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
