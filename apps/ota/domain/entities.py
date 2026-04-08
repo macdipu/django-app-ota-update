@@ -34,7 +34,10 @@ class AppUpdateEntity:
 
     id: int
     app_id: int                     # FK → MobileAppEntity.id
+    app_package_name: str
+    public_id: str
     version: str
+    build_number: int
     apk_file_path: str              # e.g. "apks/app-v1.2.apk"  (storage-agnostic)
     force_update: bool
     changelog: str

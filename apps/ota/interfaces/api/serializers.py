@@ -27,6 +27,7 @@ class AppUpdateSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
     version = serializers.CharField(read_only=True)
+    build_number = serializers.IntegerField(read_only=True)
     apk_url = serializers.SerializerMethodField()
     force_update = serializers.BooleanField(read_only=True)
     changelog = serializers.CharField(read_only=True)
@@ -47,11 +48,14 @@ class AppUpdateSerializer(serializers.Serializer):
 
         request = self.context.get("request")
 
-        if entity.id:
-            download_path = reverse("ota-download", args=[entity.id])
-            if request:
-                return request.build_absolute_uri(download_path)
-            return download_path
+        if getattr(entity, "public_id", None) and getattr(entity, "app_package_name", None):
+            try:
+                download_path = reverse("ota-download", args=[entity.app_package_name, entity.public_id])
+                if request:
+                    return request.build_absolute_uri(download_path)
+                return download_path
+            except Exception:
+                pass
 
         try:
             return storage_service.url(entity.apk_file_path, request=request)

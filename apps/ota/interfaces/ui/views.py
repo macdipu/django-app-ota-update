@@ -6,6 +6,7 @@ from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
 from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
+from apps.ota.infrastructure.storage import storage_service
 
 
 def _delete_release_file(file_field):
@@ -117,13 +118,19 @@ def app_detail(request, pk):
             update = form.save(commit=False)
             update.app = app
             update.save()
-            messages.success(request, f"Version {update.version} uploaded successfully! Storage key: {update.apk_file.name}")
+            try:
+                update.refresh_from_db()
+            except Exception:
+                pass
+            bn = getattr(update, "build_number", None)
+            bn_str = f" (build #{bn})" if bn is not None else ""
+            messages.success(request, f"Version {update.version}{bn_str} uploaded successfully! Storage key: {update.apk_file.name}")
             return redirect("ota_admin:ui_app_detail", pk=app.pk)
         else:
             messages.error(request, "Failed to upload APK. Please check the form below.")
     else:
         form = AppUpdateForm()
-        
+
     query = request.GET.get("q", "").strip()
     force_filter = request.GET.get("force", "")
 
@@ -140,9 +147,29 @@ def app_detail(request, pk):
     storage_backend = getattr(settings, "DEFAULT_FILE_STORAGE", "django.core.files.storage.FileSystemStorage")
 
     for rel in updates:
-        download_path = reverse("ota-download", args=[rel.pk])
-        rel.download_url = request.build_absolute_uri(download_path)
-    
+        if getattr(rel, "public_id", None):
+            try:
+                download_path = reverse("ota-download", args=[app.package_name, rel.public_id])
+                rel.download_url = request.build_absolute_uri(download_path)
+            except Exception:
+                # Fallback: try to resolve a direct storage URL to the APK (S3/MinIO/public)
+                try:
+                    rel.download_url = storage_service.url(rel.apk_file.name)
+                except Exception:
+                    try:
+                        rel.download_url = rel.apk_file.url
+                    except Exception:
+                        rel.download_url = ""
+        else:
+            # Fallback: try to resolve a direct storage URL to the APK (S3/MinIO/public)
+            try:
+                rel.download_url = storage_service.url(rel.apk_file.name)
+            except Exception:
+                try:
+                    rel.download_url = rel.apk_file.url
+                except Exception:
+                    rel.download_url = ""
+
     return render(request, "dashboard/app_detail.html", {
         "app": app,
         "form": form,

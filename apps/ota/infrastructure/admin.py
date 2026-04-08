@@ -23,8 +23,8 @@ from apps.ota.infrastructure.storage import storage_service
 class AppUpdateInline(default_admin.TabularInline):
     model = AppUpdate
     extra = 0
-    fields = ("version", "force_update", "apk_file", "created_at")
-    readonly_fields = ("created_at",)
+    fields = ("version", "build_number", "force_update", "apk_file", "created_at")
+    readonly_fields = ("created_at", "build_number")
     show_change_link = True
     can_delete = True
     ordering = ("-created_at",)
@@ -106,17 +106,17 @@ class MobileAppAdmin(default_admin.ModelAdmin):
 
 @default_admin.register(AppUpdate, site=ota_admin_site)
 class AppUpdateAdmin(default_admin.ModelAdmin):
-    list_display = ("version_badge", "app_link", "force_update_display", "min_supported_version", "apk_download_link", "created_at")
+    list_display = ("version_badge", "build_number", "app_link", "force_update_display", "min_supported_version", "apk_download_link", "created_at")
     list_filter = ("force_update", "app")
     search_fields = ("version", "changelog", "app__name", "app__package_name")
     ordering = ("-created_at",)
-    readonly_fields = ("created_at", "apk_download_link")
+    readonly_fields = ("created_at", "apk_download_link", "build_number")
     autocomplete_fields = []
 
     fieldsets = (
         (
             "App & Release Info",
-            {"fields": ("app", "version", "force_update", "min_supported_version")},
+            {"fields": ("app", "version", "build_number", "force_update", "min_supported_version")},
         ),
         (
             "APK File",

@@ -48,7 +48,10 @@ class DjangoUpdateRepository:
         return AppUpdateEntity(
             id=orm_obj.pk,
             app_id=orm_obj.app_id,
+            app_package_name=(orm_obj.app.package_name if orm_obj.app else ""),
+            public_id=(orm_obj.public_id if getattr(orm_obj, 'public_id', None) else ""),
             version=orm_obj.version,
+            build_number=orm_obj.build_number or 0,
             apk_file_path=orm_obj.apk_file.name if orm_obj.apk_file else "",
             force_update=orm_obj.force_update,
             changelog=orm_obj.changelog,
@@ -65,7 +68,24 @@ class DjangoUpdateRepository:
 
     def get_all(self, app_id: int) -> list[AppUpdateEntity]:
         """Return all releases for the given app, newest first."""
-        return [self._to_entity(obj) for obj in AppUpdate.objects.filter(app_id=app_id)]
+        qs = AppUpdate.objects.filter(app_id=app_id).order_by("-created_at")
+        return [self._to_entity(o) for o in qs]
+
+    def get_by_build_number(
+        self, app_id: int, build_number: int
+    ) -> Optional[AppUpdateEntity]:
+        try:
+            orm_obj = AppUpdate.objects.get(app_id=app_id, build_number=build_number)
+            return self._to_entity(orm_obj)
+        except AppUpdate.DoesNotExist:
+            return None
+
+    def get_by_id(self, update_id: int) -> Optional[AppUpdateEntity]:
+        try:
+            orm_obj = AppUpdate.objects.get(pk=update_id)
+            return self._to_entity(orm_obj)
+        except AppUpdate.DoesNotExist:
+            return None
 
 
 # Verify the concrete classes satisfy their Protocols at import time

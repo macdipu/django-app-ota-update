@@ -72,12 +72,12 @@ class DownloadReleaseViewTests(TestCase):
         self.release = AppUpdate.objects.create(app=self.app, version="1.0.0", apk_file=make_apk("v1.apk"))
 
     def test_returns_404_when_release_missing(self):
-        url = reverse("ota-download", args=[9999])
+        url = reverse("ota-download", args=["com.unknown.app", "00000000-0000-0000-0000-000000000000"])  # non-existent public_id
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     def test_streams_apk_via_django(self):
-        url = reverse("ota-download", args=[self.release.pk])
+        url = reverse("ota-download", args=[self.app.package_name, self.release.public_id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/vnd.android.package-archive")
@@ -109,3 +109,6 @@ class UpdateHistoryViewTests(TestCase):
         data = response.json()
         self.assertEqual(len(data), 2)
         self.assertEqual(data[0]["version"], "1.1.0")  # latest first
+        # Each update entry should include the per-app build number
+        self.assertIn("build_number", data[0])
+        self.assertIn("build_number", data[1])

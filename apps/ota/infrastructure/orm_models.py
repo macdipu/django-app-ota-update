@@ -114,6 +114,21 @@ class AppUpdate(models.Model):
         max_length=20,
         help_text="Semantic version string, e.g. 1.2.0",
     )
+    # Per-app, auto-incrementing build number (integer). Computed on save if missing.
+    build_number = models.IntegerField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Integer build number auto-incremented per app (read-only).",
+    )
+    # Public opaque id used in external download URLs to avoid exposing numeric ids
+    public_id = models.CharField(
+        max_length=36,
+        blank=True,
+        null=True,
+        unique=True,
+        help_text="Opaque UUID used in public download URLs.",
+    )
     apk_file = models.FileField(
         upload_to=apk_upload_path,
         validators=[validate_apk_size, validate_apk_extension],
@@ -149,7 +164,7 @@ class AppUpdate(models.Model):
         verbose_name = "App Release"
         verbose_name_plural = "App Releases"
         # version is unique per app (same version can exist for different apps)
-        unique_together = [("app", "version")]
+        unique_together = [("app", "version"), ("app", "build_number")]
 
     def __str__(self):
         return f"{self.app.name} v{self.version}"
@@ -161,6 +176,38 @@ class AppUpdate(models.Model):
             for chunk in self.apk_file.chunks():
                 hasher.update(chunk)
             self.checksum_sha256 = hasher.hexdigest()
+
+        # Ensure a per-app build_number is assigned when missing.
+        if self.build_number is None:
+            try:
+                # Import here to avoid circular imports at module-import time.
+                from django.db.models import Max
+
+                if self.app_id:
+                    max_bn = (
+                        AppUpdate.objects.filter(app_id=self.app_id)
+                        .aggregate(Max("build_number"))
+                        .get("build_number__max")
+                    )
+                else:
+                    max_bn = None
+                self.build_number = (max_bn or 0) + 1
+            except Exception:
+                # In case of any DB issues, fallback to 1 to allow save to proceed.
+                if not self.build_number:
+                    self.build_number = 1
+
+        # Ensure a public_id exists (opaque UUID). Use uuid4 hex if missing.
+        if not self.public_id:
+            try:
+                # generate a UUID4 string
+                from uuid import uuid4
+
+                self.public_id = str(uuid4())
+            except Exception:
+                # fallback to a short random string
+                self.public_id = uuid4().hex if 'uuid4' in globals() else None
+
         super().save(*args, **kwargs)
 
     # upload path handled by module-level apk_upload_path

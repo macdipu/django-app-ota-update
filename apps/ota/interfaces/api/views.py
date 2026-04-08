@@ -94,11 +94,14 @@ def update_history(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def download_release(request, release_id: int):
-    """Stream a private APK through Django so MinIO/S3 stays private."""
+def download_release(request, package: str, public_id: str):
+    """Resolve package + public_id → release and stream the APK.
 
+    Public-facing route uses the app package (e.g. com.example.app) and an
+    opaque per-release `public_id` (UUID) so numeric values are not exposed.
+    """
     try:
-        release = AppUpdate.objects.get(pk=release_id)
+        release = AppUpdate.objects.select_related("app").get(app__package_name=package, public_id=public_id)
     except AppUpdate.DoesNotExist as exc:
         raise Http404("Release not found.") from exc
 
@@ -125,9 +128,6 @@ def download_release(request, release_id: int):
     try:
         response["Content-Length"] = storage.size(name)
     except Exception:
-        # Best-effort; size may not be available for streaming backends
         pass
 
     return response
-
-
