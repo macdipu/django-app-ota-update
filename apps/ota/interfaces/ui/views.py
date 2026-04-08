@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
-from django.conf import settings
 from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
 from django.urls import reverse
@@ -144,7 +143,6 @@ def app_detail(request, pk):
     updates = list(updates)
     latest = app.updates.order_by("-created_at").first()
     last_upload_ts = latest.created_at if latest else None
-    storage_backend = getattr(settings, "DEFAULT_FILE_STORAGE", "django.core.files.storage.FileSystemStorage")
 
     for rel in updates:
         if getattr(rel, "public_id", None):
@@ -178,5 +176,4 @@ def app_detail(request, pk):
         "last_upload_ts": last_upload_ts,
         "query": query,
         "force_filter": force_filter,
-        "storage_backend": storage_backend,
     })
