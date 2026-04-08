@@ -79,6 +79,11 @@ class MobileApp(models.Model):
         help_text="Optional app icon (PNG/JPG, recommended 512×512).",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    # A per-app counter used to allocate build numbers atomically.
+    last_build_number = models.IntegerField(
+        default=0,
+        help_text="Last allocated build number for this app (used for atomic allocation).",
+    )
 
     class Meta:
         app_label = "ota"
@@ -179,21 +184,31 @@ class AppUpdate(models.Model):
 
         # Ensure a per-app build_number is assigned when missing.
         if self.build_number is None:
+            # Prefer an atomic allocation using a per-app counter to avoid races.
             try:
-                # Import here to avoid circular imports at module-import time.
-                from django.db.models import Max
+                from django.db import transaction
 
                 if self.app_id:
+                    # Lock the MobileApp row and increment its counter atomically.
+                    with transaction.atomic():
+                        app_row = MobileApp.objects.select_for_update().get(pk=self.app_id)
+                        app_row.last_build_number = (app_row.last_build_number or 0) + 1
+                        app_row.save(update_fields=["last_build_number"])
+                        # Refresh to be sure we have the persisted value
+                        app_row.refresh_from_db()
+                        self.build_number = app_row.last_build_number
+                else:
+                    # No app associated; fallback to Max+1 behavior
+                    from django.db.models import Max
+
                     max_bn = (
                         AppUpdate.objects.filter(app_id=self.app_id)
                         .aggregate(Max("build_number"))
                         .get("build_number__max")
                     )
-                else:
-                    max_bn = None
-                self.build_number = (max_bn or 0) + 1
+                    self.build_number = (max_bn or 0) + 1
             except Exception:
-                # In case of any DB issues, fallback to 1 to allow save to proceed.
+                # In case of any DB issues (e.g., missing table during migrate), fallback to 1
                 if not self.build_number:
                     self.build_number = 1
 

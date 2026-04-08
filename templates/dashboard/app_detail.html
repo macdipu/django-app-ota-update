@@ -35,7 +35,12 @@
                     <i class="ph ph-upload-simple" style="color: var(--primary);"></i>
                     Upload New APK Version
                 </h3>
-                <span class="badge badge-primary">{{ app.package_name }}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="badge badge-primary">{{ app.package_name }}</span>
+                    {% if next_build_number %}
+                        <span style="background:#eef2ff;color:#0369a1;border-radius:12px;padding:4px 8px;font-size:12px;font-weight:600;">Next build: #{{ next_build_number }}</span>
+                    {% endif %}
+                </div>
             </div>
             
             <form method="POST" action="{% url 'ota_admin:ui_app_detail' app.pk %}" enctype="multipart/form-data">

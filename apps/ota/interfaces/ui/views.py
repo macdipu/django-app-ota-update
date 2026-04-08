@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Max
 from apps.ota.infrastructure.orm_models import MobileApp, AppUpdate
 from apps.ota.interfaces.ui.forms import MobileAppForm, AppUpdateForm
 from django.urls import reverse
@@ -143,6 +143,13 @@ def app_detail(request, pk):
     updates = list(updates)
     latest = app.updates.order_by("-created_at").first()
     last_upload_ts = latest.created_at if latest else None
+    # Compute the next build number we expect to assign for the app (max existing + 1)
+    try:
+        agg = app.updates.aggregate(max_bn=Max("build_number"))
+        max_bn = agg.get("max_bn")
+        next_build_number = (max_bn or 0) + 1
+    except Exception:
+        next_build_number = None
 
     for rel in updates:
         if getattr(rel, "public_id", None):
@@ -176,4 +183,5 @@ def app_detail(request, pk):
         "last_upload_ts": last_upload_ts,
         "query": query,
         "force_filter": force_filter,
+        "next_build_number": next_build_number,
     })
