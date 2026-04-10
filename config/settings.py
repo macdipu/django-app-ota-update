@@ -9,9 +9,12 @@ def env_bool(key: str, default: bool = False) -> bool:
     """Parse common truthy strings from environment variables."""
     return os.getenv(key, str(default)).lower() in {"1", "true", "t", "yes", "y", "on"}
 
-SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-secret-change-in-production")
-DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
+SECRET_KEY = os.environ["SECRET_KEY"]
+DEBUG = env_bool("DEBUG", False)
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
+
+if not DEBUG and not ALLOWED_HOSTS:
+    raise RuntimeError("ALLOWED_HOSTS must be set when DEBUG=False")
 
 # ---------------------------------------------------------------------------
 # Apps
@@ -70,11 +73,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "ota_db"),
-        "USER": os.getenv("POSTGRES_USER", "postgres"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": os.environ["POSTGRES_DB"],
+        "USER": os.environ["POSTGRES_USER"],
+        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        "HOST": os.environ["POSTGRES_HOST"],
+        "PORT": os.environ["POSTGRES_PORT"],
     }
 }
 
@@ -111,10 +114,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 INSTALLED_APPS += ["storages"]
 DEFAULT_FILE_STORAGE = "apps.ota.infrastructure.storage.PublicRewritingS3Boto3Storage"
 
-AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "ota-media")
-AWS_S3_ENDPOINT_URL = os.getenv("MINIO_ENDPOINT_URL", "http://localhost:9000").rstrip("/")
-AWS_ACCESS_KEY_ID = os.getenv("MINIO_ACCESS_KEY_ID", "")
-AWS_SECRET_ACCESS_KEY = os.getenv("MINIO_SECRET_KEY", "")
+AWS_STORAGE_BUCKET_NAME = os.environ["MINIO_BUCKET_NAME"]
+AWS_S3_ENDPOINT_URL = os.environ["MINIO_ENDPOINT_URL"].rstrip("/")
+AWS_ACCESS_KEY_ID = os.environ["MINIO_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["MINIO_SECRET_KEY"]
 AWS_S3_REGION_NAME = os.getenv("MINIO_REGION_NAME", "us-east-1")
 AWS_S3_ADDRESSING_STYLE = os.getenv("MINIO_ADDRESSING_STYLE", "path")
 AWS_S3_SIGNATURE_VERSION = "s3v4"
