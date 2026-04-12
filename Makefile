@@ -1,39 +1,49 @@
-COMPOSE = docker compose -f docker/compose/local.yml
+COMPOSE_LOCAL = docker compose --env-file .env -f docker/compose/local.yml
+COMPOSE_PROD = docker compose --env-file .env -f docker/compose/prod.yml
 
-.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean deps
+.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean deps collectstatic prod-up prod-down prod-logs
 
 up:
-	$(COMPOSE) up --build
+	$(COMPOSE_LOCAL) up --build
 
 deps:
-	$(COMPOSE) up -d db minio
+	$(COMPOSE_LOCAL) up -d db minio
 
 down:
-	$(COMPOSE) down
+	$(COMPOSE_LOCAL) down
 
 rebuild:
-	$(COMPOSE) build --no-cache
+	$(COMPOSE_LOCAL) build --no-cache
 
 migrate:
-	$(COMPOSE) run --rm app python manage.py migrate --noinput
+	$(COMPOSE_LOCAL) run --rm app python manage.py migrate --noinput
 
 makemigrations:
-	$(COMPOSE) run --rm app python manage.py makemigrations
+	$(COMPOSE_LOCAL) run --rm app python manage.py makemigrations
 
 shell:
-	$(COMPOSE) run --rm app python manage.py shell
+	$(COMPOSE_LOCAL) run --rm app python manage.py shell
 
 logs:
-	$(COMPOSE) logs -f
+	$(COMPOSE_LOCAL) logs -f
 
 test:
-	$(COMPOSE) run --rm app pytest
+	$(COMPOSE_LOCAL) run --rm app pytest
 
 superuser:
-	$(COMPOSE) run --rm app python manage.py createsuperuser
+	$(COMPOSE_LOCAL) run --rm app python manage.py createsuperuser
 
 collectstatic:
-	$(COMPOSE) run --rm app python manage.py collectstatic --noinput
+	$(COMPOSE_LOCAL) run --rm app python manage.py collectstatic --noinput
 
 clean:
-	$(COMPOSE) down -v
+	$(COMPOSE_LOCAL) down -v
+
+prod-up:
+	$(COMPOSE_PROD) up --build -d
+
+prod-down:
+	$(COMPOSE_PROD) down
+
+prod-logs:
+	$(COMPOSE_PROD) logs -f
