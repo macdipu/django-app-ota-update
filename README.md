@@ -91,15 +91,28 @@ python manage.py runserver
 ### Media storage (local vs MinIO)
 
 - Default: uploaded APKs are stored on local disk under `media/apks/` and served via `MEDIA_URL`.
- - To use MinIO (or any S3-compatible storage), set these env vars (see `.env.example`):
+
+- To use MinIO (or any S3-compatible storage), provide the MinIO/S3 connection variables to the `app` service. Example (see `example.env`):
+
   ```bash
+  # --- App (Django) - MinIO/S3 connection
   MINIO_ENDPOINT_URL=http://localhost:9000   # or https://minio.yourdomain.com
+  MEDIA_PUBLIC_BASE_URL=http://localhost:9000 # optional - public-facing URL for media
   MINIO_BUCKET_NAME=ota-media
   MINIO_ACCESS_KEY_ID=...
   MINIO_SECRET_KEY=...
   MINIO_REGION_NAME=us-east-1
   MINIO_USE_SSL=False
   ```
+
+- If you run MinIO via Docker Compose, the MinIO container needs root credentials; these are separate and used only by the container (example in `example.env` / `docker/compose/local.yml`):
+
+  ```bash
+  # --- MinIO container root credentials (docker-compose)
+  MINIO_ROOT_USER=minioadmin
+  MINIO_ROOT_PASSWORD=minioadmin
+  ```
+
 - No model changes are required; the `FileField` writes to the configured storage backend.
 
 ### URLs
