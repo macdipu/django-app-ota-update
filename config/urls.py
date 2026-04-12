@@ -32,5 +32,5 @@ urlpatterns = [
 ]
 
 # Serve media files in development when using local storage
-if settings.DEBUG and not getattr(settings, "MINIO_ENABLED", False):
+if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
