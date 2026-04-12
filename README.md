@@ -1,6 +1,6 @@
-# Django OTA Update API
+# InApp Update Manager
 
-A minimal, production-ready Django + DRF backend for managing Android Over-the-Air (OTA) APK updates.
+A minimal, production-ready Django + DRF backend for managing Android in-app APK updates (InApp Update Manager).
 
 Admins upload APK releases via Django Admin. A Flutter app polls a public REST endpoint to check for updates and download the latest APK.
 
@@ -11,7 +11,7 @@ Admins upload APK releases via Django Admin. A Flutter app polls a public REST e
 ```
 .
 ├── apps/
-│   └── ota/                  # OTA update feature (Clean Architecture)
+│   └── ota/                  # InApp update feature (Clean Architecture)
 │       ├── domain/           # Domain layer (entities, exceptions, repositories)
 │       │   ├── entities.py   # Domain entities
 │       │   ├── exceptions.py # Domain exceptions
@@ -58,7 +58,7 @@ Admins upload APK releases via Django Admin. A Flutter app polls a public REST e
 git clone <repo-url>
 cd django-app-ota-update
 
-cp .env.example .env
+cp example.env .env
 # Edit .env with your Postgres credentials
 ```
 

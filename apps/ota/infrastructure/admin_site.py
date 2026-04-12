@@ -11,10 +11,10 @@ from django.shortcuts import render
 
 
 class OtaAdminSite(AdminSite):
-    """Custom admin site for OTA Update Manager with remember-me login."""
+    """Custom admin site for InApp Update Manager with remember-me login."""
 
-    site_header = "OTA Update Manager"
-    site_title = "OTA Admin"
+    site_header = "InApp Update Manager"
+    site_title = "InApp Admin"
     index_title = "Dashboard"
     site_url = None  # Remove "View Site" link from header
     login_template = "dashboard/login.html"

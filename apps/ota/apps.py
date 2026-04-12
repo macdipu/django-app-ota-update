@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class OtaConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.ota"
-    verbose_name = "OTA Updates"
+    verbose_name = "InApp Update Manager"
 
     def ready(self):
         """Import admin registrations and ensure the MinIO bucket exists."""
