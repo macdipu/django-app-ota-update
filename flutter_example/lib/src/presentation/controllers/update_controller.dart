@@ -54,6 +54,7 @@ class UpdateController extends GetxController {
   final RxString status = ''.obs;
   final RxString changelog = ''.obs;
   final Rxn<UpdateInfo> updateInfo = Rxn<UpdateInfo>();
+  final RxBool isUpdateCompleted = false.obs;
   StreamSubscription<OtaEvent>? _otaSub;
   final RxBool isDownloading = false.obs;
   StreamSubscription<bool>? _downloadingSub;
@@ -120,6 +121,7 @@ class UpdateController extends GetxController {
     if (ui == null) return;
     _otaSub?.cancel();
     progress.value = 0.0;
+    isUpdateCompleted.value = false;
     // set initial status and mark downloading so UI updates immediately
     status.value = 'Starting...';
     isDownloading.value = true;
@@ -136,15 +138,18 @@ class UpdateController extends GetxController {
         } else if (event.status == OtaStatus.INSTALLATION_DONE) {
           progress.value = 1.0;
           status.value = 'Installation complete';
+          isUpdateCompleted.value = true;
           isDownloading.value = false;
         } else if (event.status == OtaStatus.DOWNLOAD_ERROR ||
             event.status == OtaStatus.INTERNAL_ERROR) {
           status.value = 'Error during update';
+          isUpdateCompleted.value = false;
           isDownloading.value = false;
         }
       },
       onError: (e) {
         status.value = 'Update failed';
+        isUpdateCompleted.value = false;
         isDownloading.value = false;
       },
       onDone: () {
@@ -164,6 +169,7 @@ class UpdateController extends GetxController {
       }
     } catch (_) {}
     status.value = 'Cancelled';
+    isUpdateCompleted.value = false;
     isDownloading.value = false;
   }
 

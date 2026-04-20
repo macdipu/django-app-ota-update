@@ -11,6 +11,14 @@ class UpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (controller.isUpdateCompleted.value) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (Get.isDialogOpen ?? false) {
+            Get.back<void>();
+          }
+        });
+      }
+
       final info = controller.updateInfo.value;
       if (info == null) return const SizedBox.shrink();
 

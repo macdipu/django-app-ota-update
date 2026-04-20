@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return AutoUpdateGate(
+     enableInReleaseMode: true,
       baseUrl: exampleBaseUrl,
       packageName: examplePackageName,
       child: Scaffold(

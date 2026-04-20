@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../controllers/update_controller.dart';
@@ -9,6 +10,7 @@ class AutoUpdateGate extends StatefulWidget {
   final String baseUrl;
   final String packageName;
   final bool checkOnFirstFrame;
+  final bool enableInReleaseMode;
 
   const AutoUpdateGate({
     Key? key,
@@ -16,6 +18,7 @@ class AutoUpdateGate extends StatefulWidget {
     required this.baseUrl,
     required this.packageName,
     this.checkOnFirstFrame = true,
+    this.enableInReleaseMode = false,
   }) : super(key: key);
 
   @override
@@ -27,6 +30,13 @@ class _AutoUpdateGateState extends State<AutoUpdateGate> {
   bool _dialogOpen = false;
   int? _lastPromptedBuild;
 
+  bool get _isUpdateGateEnabled {
+    if (kReleaseMode && !widget.enableInReleaseMode) {
+      return false;
+    }
+    return true;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +45,7 @@ class _AutoUpdateGateState extends State<AutoUpdateGate> {
       packageName: widget.packageName,
     );
 
-    if (widget.checkOnFirstFrame) {
+    if (widget.checkOnFirstFrame && _isUpdateGateEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkAndPrompt();
       });
@@ -43,6 +53,8 @@ class _AutoUpdateGateState extends State<AutoUpdateGate> {
   }
 
   Future<void> _checkAndPrompt() async {
+    if (!_isUpdateGateEnabled) return;
+
     await _controller.checkForUpdate();
     if (!mounted) return;
 
