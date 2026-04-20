@@ -1,5 +1,5 @@
 .git
-.gitignore
+../.gitignore
 .github
 .idea
 __pycache__
@@ -9,7 +9,7 @@ __pycache__
 .Python
 env
 venv
-.venv
+backend/.venv
 pip-log.txt
 pip-delete-this-directory.txt
 .tox
