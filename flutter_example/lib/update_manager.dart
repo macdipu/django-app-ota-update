@@ -1,4 +1,4 @@
-library update_manager;
+library in_update_manager;
 
 export 'src/presentation/controllers/update_controller.dart';
 export 'src/presentation/widgets/auto_update_gate.dart';

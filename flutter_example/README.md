@@ -5,7 +5,7 @@ Standalone in-app OTA update module using ota_update, package_info_plus and clea
 
 Quick start
 
-- Add `update_manager` as a local package or copy code into your project.
+- Add `in_update_manager` as a local package or copy code into your project.
 - Example app is in `example/` folder. Run example with `flutter run` from that folder (add flutter project config as needed).
 
 Android notes

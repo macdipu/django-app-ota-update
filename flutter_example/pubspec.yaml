@@ -1,4 +1,4 @@
-name: update_manager
+name: in_update_manager
 description: A reusable in-app OTA update manager using ota_update and clean architecture.
 version: 0.0.1
 publish_to: "none"
