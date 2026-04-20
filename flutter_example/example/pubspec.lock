@@ -112,6 +112,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
+  in_update_manager:
+    dependency: "direct main"
+    description:
+      path: ".."
+      relative: true
+    source: path
+    version: "0.0.1"
   leak_tracker:
     dependency: transitive
     description:
@@ -269,13 +276,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  update_manager:
-    dependency: "direct main"
-    description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.0.1"
   vector_math:
     dependency: transitive
     description:
