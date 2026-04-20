@@ -13,6 +13,27 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = env_bool("DEBUG", False)
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
 
+# Strip quotes in case the secret value is stored with surrounding quotes
+CSRF_TRUSTED_ORIGINS = [
+    o.strip().strip("\"'")
+    for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if o.strip()
+]
+
+# Trust reverse-proxy headers (nginx/ingress sets X-Forwarded-Proto: https)
+USE_X_FORWARDED_HOST = env_bool("USE_X_FORWARDED_HOST", True)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Auto-derive trusted origins from ALLOWED_HOSTS so CSRF_TRUSTED_ORIGINS doesn't
+# need to be set separately — ALLOWED_HOSTS must already be correct for the app to
+# respond at all, so this is always safe.
+if not CSRF_TRUSTED_ORIGINS:
+    for _host in ALLOWED_HOSTS:
+        if _host not in ("*", "localhost", "127.0.0.1"):
+            CSRF_TRUSTED_ORIGINS.append(f"https://{_host}")
+    if DEBUG:
+        CSRF_TRUSTED_ORIGINS += ["http://localhost:8000", "http://127.0.0.1:8000"]
+
 if not DEBUG and not ALLOWED_HOSTS:
     raise RuntimeError("ALLOWED_HOSTS must be set when DEBUG=False")
 

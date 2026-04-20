@@ -9,9 +9,9 @@
     <div class="card">
         <h2 style="margin-bottom: 24px; font-weight: 600;">App Details</h2>
         
-        <form method="POST" action="{% url 'ota_admin:ui_app_create' %}">
+        <form method="POST" action="{% url 'ota_admin:ui_app_create' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            
+
             <div class="form-group">
                 <label for="id_name">App Name</label>
                 {{ form.name.errors }}
@@ -29,6 +29,13 @@
                 <label for="id_description">Description (Optional)</label>
                 {{ form.description.errors }}
                 <textarea name="description" id="id_description" class="form-control" placeholder="Brief info about this application..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="id_icon">App Icon (Optional)</label>
+                {{ form.icon.errors }}
+                <input type="file" name="icon" id="id_icon" class="form-control" accept="image/*">
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">PNG or JPG, recommended 512×512. Shown on the public download page.</div>
             </div>
             
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">

@@ -5,10 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% trans "Sign In" %} | InApp Update Manager</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
     <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'dashboard/css/style.css' %}">
     
@@ -74,8 +75,8 @@
     <div class="login-layout">
         <div class="login-card">
             <div class="login-header">
-                <div class="icon">
-                    <i class="ph-fill ph-rocket-launch"></i>
+                <div style="margin-bottom:var(--sp-4);">
+                    <img src="{% static 'ota_logo.png' %}" alt="OTA Logo" style="height:48px;width:auto;object-fit:contain;">
                 </div>
                 <h1>Welcome Back</h1>
                 <p>Sign in to your InApp Update Manager dashboard</p>

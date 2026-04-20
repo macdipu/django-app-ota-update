@@ -1,0 +1,85 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signed Out | InApp Update Manager</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'dashboard/css/style.css' %}">
+
+    <style>
+        .login-layout {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            padding: var(--sp-6);
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            padding: 40px var(--sp-8);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--sp-8);
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: var(--sp-6);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-layout">
+        <div class="login-card">
+            <div class="login-header">
+                <div style="margin-bottom:var(--sp-4);">
+                    <img src="{% static 'ota_logo.png' %}" alt="OTA Logo" style="height:48px;width:auto;object-fit:contain;">
+                </div>
+                <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:#f0fdf4;color:#16a34a;border-radius:var(--radius-lg);font-size:28px;margin-bottom:var(--sp-4);">
+                    <i class="ph ph-check-circle"></i>
+                </div>
+                <h1>Signed Out</h1>
+                <p>You have been successfully signed out.</p>
+            </div>
+
+            <a href="{% url 'ota_admin:login' %}" class="btn btn-primary" style="width:100%;height:44px;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                <i class="ph ph-sign-in"></i> Sign In Again
+            </a>
+
+            <div class="login-footer">
+                Protected Admin Area &copy; InApp Update Manager
+            </div>
+        </div>
+    </div>
+</body>
+</html>

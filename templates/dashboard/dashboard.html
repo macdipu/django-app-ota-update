@@ -21,9 +21,12 @@
                     <h3>{{ app.name }}</h3>
                     <p>{{ app.package_name }}</p>
                 </div>
-                <!-- App Icon placeholder or Image -->
                 <div class="app-icon">
-                    <i class="ph ph-device-mobile"></i>
+                    {% if app.icon %}
+                        <img src="{{ app.icon.url }}" alt="{{ app.name }} icon" style="width:48px;height:48px;border-radius:12px;object-fit:cover;">
+                    {% else %}
+                        <i class="ph ph-device-mobile"></i>
+                    {% endif %}
                 </div>
             </div>
 

@@ -5,8 +5,6 @@ django-filter
 psycopg2-binary
 gunicorn
 whitenoise
-pytest
-pytest-django
 
 Pillow>=10.0.0
 django-storages

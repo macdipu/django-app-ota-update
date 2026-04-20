@@ -1,8 +1,23 @@
+# =========================
+# VARIABLES
+# =========================
+REGISTRY ?= hub.polygon.local/zaytoon-fintech
+IMAGE_NAME ?= app
+VERSION ?= latest
+
+BLUE=\033[0;34m
+GREEN=\033[0;32m
+NC=\033[0m
+
 COMPOSE_LOCAL = docker compose --env-file .env -f docker/compose/local.yml
 COMPOSE_PROD = docker compose --env-file .env -f docker/compose/prod.yml
 
-.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean deps collectstatic prod-up prod-down prod-logs
+.PHONY: up down rebuild migrate makemigrations shell logs test superuser clean deps collectstatic \
+        prod-up prod-down prod-logs docker-build docker-push
 
+# =========================
+# LOCAL ENV
+# =========================
 up:
 	$(COMPOSE_LOCAL) up --build
 
@@ -39,6 +54,22 @@ collectstatic:
 clean:
 	$(COMPOSE_LOCAL) down -v
 
+# =========================
+# DOCKER BUILD & PUSH
+# =========================
+docker-build:
+	@echo "$(BLUE)Building Docker image...$(NC)"
+	docker build -t $(REGISTRY)/$(IMAGE_NAME):$(VERSION) .
+	@echo "$(GREEN)Build completed!$(NC)"
+
+docker-push:
+	@echo "$(BLUE)Pushing Docker image...$(NC)"
+	docker push $(REGISTRY)/$(IMAGE_NAME):$(VERSION)
+	@echo "$(GREEN)Push completed!$(NC)"
+
+# =========================
+# PRODUCTION
+# =========================
 prod-up:
 	$(COMPOSE_PROD) up --build -d
 

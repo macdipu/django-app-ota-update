@@ -132,17 +132,107 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// Simple upload progress indicator (non-XHR): show spinner on submit
+// Chunked upload with real progress bar
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector('#upload form');
     if (!form) return;
-    const submitBtn = document.getElementById('upload-submit');
-    const progress = document.getElementById('upload-progress');
-    form.addEventListener('submit', () => {
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading…';
+
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB per chunk
+
+    const submitBtn   = document.getElementById('upload-submit');
+    const progressWrap = document.getElementById('upload-progress-wrap');
+    const progressBar  = document.getElementById('upload-progress-bar');
+    const progressPct  = document.getElementById('upload-progress-pct');
+    const progressMsg  = document.getElementById('upload-progress-msg');
+
+    function setProgress(pct, msg) {
+        if (progressBar) progressBar.style.width = pct + '%';
+        if (progressPct) progressPct.textContent = pct + '%';
+        if (progressMsg) progressMsg.textContent = msg;
+    }
+
+    function showError(msg) {
+        setProgress(0, msg);
+        if (progressBar) progressBar.classList.add('progress-bar-error');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Upload Release'; }
+    }
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const fileInput = form.querySelector('input[type="file"][name="apk_file"]');
+        const file = fileInput && fileInput.files[0];
+        const version = form.querySelector('[name=version]').value.trim();
+
+        // Fallback to normal submit if JS chunking is unavailable
+        if (!file || !version || !form.dataset.initUrl) {
+            form.submit();
+            return;
         }
-        if (progress) progress.style.display = 'inline';
+
+        const csrf = form.querySelector('[name=csrfmiddlewaretoken]').value;
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Uploading…'; }
+        if (progressWrap) progressWrap.style.display = 'block';
+        if (progressBar) progressBar.classList.remove('progress-bar-error');
+        setProgress(0, 'Initializing…');
+
+        try {
+            // 1. Init
+            const initRes = await fetch(form.dataset.initUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrf },
+                body: new URLSearchParams({
+                    app_pk: form.dataset.appPk,
+                    filename: file.name,
+                    total_chunks: totalChunks,
+                }),
+            });
+            if (!initRes.ok) { showError('Init failed — server error.'); return; }
+            const { upload_id, error: initErr } = await initRes.json();
+            if (initErr) { showError(initErr); return; }
+
+            // 2. Upload chunks
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const fd = new FormData();
+                fd.append('upload_id', upload_id);
+                fd.append('chunk_index', i);
+                fd.append('chunk', file.slice(start, start + CHUNK_SIZE), file.name);
+
+                const chunkRes = await fetch(form.dataset.chunkUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrf },
+                    body: fd,
+                });
+                if (!chunkRes.ok) { showError(`Chunk ${i + 1}/${totalChunks} failed.`); return; }
+
+                const pct = Math.round(((i + 1) / totalChunks) * 85);
+                setProgress(pct, `Uploading… ${i + 1} / ${totalChunks} chunks`);
+            }
+
+            // 3. Complete
+            setProgress(90, 'Saving release…');
+            const fd = new FormData();
+            fd.append('upload_id', upload_id);
+            fd.append('version', version);
+            fd.append('force_update', form.querySelector('[name=force_update]').checked ? 'true' : 'false');
+            fd.append('changelog', form.querySelector('[name=changelog]').value);
+
+            const completeRes = await fetch(form.dataset.completeUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrf },
+                body: fd,
+            });
+            const result = await completeRes.json();
+            if (!completeRes.ok || result.error) { showError(result.error || 'Complete failed.'); return; }
+
+            setProgress(100, 'Upload complete! Redirecting…');
+            setTimeout(() => { window.location.href = result.redirect; }, 600);
+
+        } catch (err) {
+            showError('Upload failed: ' + err.message);
+        }
     });
 });

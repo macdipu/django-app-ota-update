@@ -6,10 +6,14 @@ from django.shortcuts import redirect
 from core.health import health_check, db_health_check
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from apps.ota.infrastructure.admin_site import ota_admin_site
+from apps.ota.interfaces.ui.views import release_landing
 
 urlpatterns = [
     # Root → Custom dashboard (served by ota_admin_site)
     path("", lambda request: redirect("ota_admin:index"), name="root"),
+
+    # Public release landing page (no auth)
+    path("release/<str:package>/<str:public_id>/", release_landing, name="release-landing"),
 
     # Custom dashboard
     path("dashboard/", ota_admin_site.urls),

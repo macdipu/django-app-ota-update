@@ -16,10 +16,13 @@ Dependency flow:
 from pathlib import Path
 
 from django.http import FileResponse, Http404
+from django.shortcuts import redirect
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+
+from apps.ota.infrastructure.storage import storage_service
 
 from apps.ota.domain.exceptions import AppNotFoundError, NoUpdatesAvailableError
 from apps.ota.infrastructure.di import (
@@ -111,11 +114,21 @@ def download_release(request, package: str, public_id: str):
     storage = release.apk_file.storage
     name = release.apk_file.name
 
+    # Redirect to a presigned storage URL so the transfer goes directly
+    # from MinIO/S3 to the client — avoids gunicorn worker timeout on large files.
+    try:
+        presigned_url = storage_service.url(name)
+        if presigned_url:
+            return redirect(presigned_url)
+    except Exception:
+        pass
+
+    # Fallback: stream locally (e.g. local-disk storage in dev)
     try:
         file_obj = storage.open(name, mode="rb")
     except FileNotFoundError as exc:
         raise Http404("APK file missing.") from exc
-    except Exception as exc:  # pragma: no cover - backend-specific errors
+    except Exception as exc:  # pragma: no cover
         raise Http404("Unable to open APK file.") from exc
 
     response = FileResponse(
@@ -124,10 +137,8 @@ def download_release(request, package: str, public_id: str):
         filename=Path(name).name,
         content_type="application/vnd.android.package-archive",
     )
-
     try:
         response["Content-Length"] = storage.size(name)
     except Exception:
         pass
-
     return response

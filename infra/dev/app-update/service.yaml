@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: inapp-update-manager
+  labels:
+    app: inapp-update-manager
+  namespace: inapp-update-manager
+spec:
+  selector:
+    app: inapp-update-manager
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP

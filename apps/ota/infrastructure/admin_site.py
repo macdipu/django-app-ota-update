@@ -18,6 +18,7 @@ class OtaAdminSite(AdminSite):
     index_title = "Dashboard"
     site_url = None  # Remove "View Site" link from header
     login_template = "dashboard/login.html"
+    logout_template = "dashboard/logged_out.html"
 
     def login(self, request, extra_context=None):
         """Override login to support 'Remember Me' checkbox.
@@ -47,6 +48,15 @@ class OtaAdminSite(AdminSite):
             path("app/<int:app_pk>/release/<int:pk>/delete/", self.admin_view(ui_views.release_delete), name="ui_release_delete"),
             path("app/<int:app_pk>/release/<int:pk>/pin/", self.admin_view(ui_views.release_pin), name="ui_release_pin"),
             path("app/<int:app_pk>/release/bulk-delete/", self.admin_view(ui_views.release_bulk_delete), name="ui_release_bulk_delete"),
+            # Chunked upload
+            path("upload/init/", self.admin_view(ui_views.upload_init), name="ui_upload_init"),
+            path("upload/chunk/", self.admin_view(ui_views.upload_chunk), name="ui_upload_chunk"),
+            path("upload/complete/", self.admin_view(ui_views.upload_complete), name="ui_upload_complete"),
+            # User management (superuser only)
+            path("users/", self.admin_view(ui_views.user_list), name="ui_user_list"),
+            path("users/create/", self.admin_view(ui_views.user_create), name="ui_user_create"),
+            path("users/<int:pk>/edit/", self.admin_view(ui_views.user_edit), name="ui_user_edit"),
+            path("users/<int:pk>/delete/", self.admin_view(ui_views.user_delete), name="ui_user_delete"),
         ]
         return custom_urls + urls
 

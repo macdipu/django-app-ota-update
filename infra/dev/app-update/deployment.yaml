@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inapp-update-manager
+  labels:
+    app: inapp-update-manager
+  namespace: inapp-update-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inapp-update-manager
+  template:
+    metadata:
+      labels:
+        app: inapp-update-manager
+    spec:
+      initContainers:
+        - name: migrate
+          image: hub.polygon.local/inapp_update_manager/inapp-update-manager:latest
+          command:
+            - sh
+            - -c
+            - |
+              python manage.py migrate --noinput &&
+              python manage.py collectstatic --noinput
+          envFrom:
+            - secretRef:
+                name: inapp-update-manager-secret
+      containers:
+        - name: app
+          image: hub.polygon.local/inapp_update_manager/inapp-update-manager:latest
+          command:
+            - gunicorn
+            - config.wsgi:application
+            - --bind
+            - 0.0.0.0:8000
+            - --workers
+            - "3"
+            - --timeout
+            - "300"
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: inapp-update-manager-secret
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+              httpHeaders:
+                - name: Host
+                  value: localhost
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+              httpHeaders:
+                - name: Host
+                  value: localhost
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      restartPolicy: Always

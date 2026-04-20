@@ -1,0 +1,71 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Users | OTA Portal{% endblock %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Users</h2>
+    <a href="{% url 'ota_admin:ui_user_create' %}" class="btn btn-primary">
+        <i class="ph ph-plus"></i> Add User
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr {% if not u.is_active %}style="opacity:0.5;"{% endif %}>
+                    <td style="font-weight:600;">
+                        {{ u.username }}
+                        {% if u == request.user %}
+                            <span style="background:#eef2ff;color:#0369a1;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;margin-left:6px;">You</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-muted);font-size:13px;">{{ u.email|default:"—" }}</td>
+                    <td>
+                        {% if u.is_superuser %}
+                            <span class="badge badge-danger" style="font-size:11px;">Superuser</span>
+                        {% elif u.is_staff %}
+                            <span class="badge badge-primary" style="font-size:11px;">Staff</span>
+                        {% else %}
+                            <span style="font-size:12px;color:var(--text-muted);">Regular</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span style="color:var(--success);font-size:12px;font-weight:600;">Active</span>
+                        {% else %}
+                            <span style="color:var(--danger);font-size:12px;font-weight:600;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:8px;">
+                            <a href="{% url 'ota_admin:ui_user_edit' u.pk %}" class="btn btn-outline btn-sm">Edit</a>
+                            {% if u != request.user %}
+                                <a href="{% url 'ota_admin:ui_user_delete' u.pk %}" class="btn btn-outline btn-sm" style="color:var(--danger);">Delete</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

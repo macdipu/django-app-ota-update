@@ -5,29 +5,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}InApp Update Manager{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
     <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'dashboard/css/style.css' %}">
 </head>
 <body>
     <div class="app-layout">
-        {# Sidebar removed — dashboard uses full-width main content now #}
-
         <!-- Main Content Wrapper -->
         <main class="main-wrapper">
             <!-- Topbar -->
             <header class="topbar">
-                <div class="page-title">
-                    {% block page_title %}Dashboard{% endblock %}
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <img src="{% static 'ota_logo.png' %}" alt="OTA Logo" style="height:32px;width:auto;object-fit:contain;">
+                    <div class="page-title">{% block page_title %}Dashboard{% endblock %}</div>
                 </div>
-                <div class="user-profile">
-                    <span>Admin User</span>
-                    <div class="avatar">
-                        <i class="ph ph-user"></i>
+                <div class="user-profile" style="display:flex;align-items:center;gap:10px;">
+                    {% if request.user.is_superuser %}
+                        <a href="{% url 'ota_admin:ui_user_list' %}" class="btn btn-outline btn-sm" title="Manage Users">
+                            <i class="ph ph-users"></i>
+                        </a>
+                    {% endif %}
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="avatar"><i class="ph ph-user"></i></div>
+                        <span>{{ request.user.username }}</span>
                     </div>
+                    <form method="post" action="{% url 'ota_admin:logout' %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline btn-sm" title="Logout">
+                            <i class="ph ph-sign-out"></i>
+                        </button>
+                    </form>
                 </div>
             </header>
 

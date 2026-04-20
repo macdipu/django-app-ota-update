@@ -1,0 +1,102 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ action }} User | OTA Portal{% endblock %}
+
+{% block page_title %}
+<div style="display:flex;align-items:center;gap:12px;">
+    <a href="{% url 'ota_admin:ui_user_list' %}" class="btn btn-outline btn-sm" style="border-radius:50%;padding:4px;"><i class="ph ph-arrow-left"></i></a>
+    {{ action }} User{% if edit_user and action != "Create" %}: {{ edit_user.username }}{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:0 auto;">
+    <div class="card">
+
+        {% if action == "Delete" %}
+            <p style="margin-bottom:24px;">Are you sure you want to delete user <strong>{{ edit_user.username }}</strong>? This cannot be undone.</p>
+            <form method="post" action="{% url 'ota_admin:ui_user_delete' edit_user.pk %}">
+                {% csrf_token %}
+                <div style="display:flex;justify-content:flex-end;gap:12px;">
+                    <a href="{% url 'ota_admin:ui_user_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="background:var(--danger);border-color:var(--danger);">Delete</button>
+                </div>
+            </form>
+
+        {% else %}
+            <form method="post" action="{% if action == 'Edit' %}{% url 'ota_admin:ui_user_edit' edit_user.pk %}{% else %}{% url 'ota_admin:ui_user_create' %}{% endif %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="id_username">Username</label>
+                    {{ form.username.errors }}
+                    <input type="text" name="username" id="id_username" class="form-control"
+                           value="{{ form.username.value|default:'' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_email">Email (optional)</label>
+                    {{ form.email.errors }}
+                    <input type="email" name="email" id="id_email" class="form-control"
+                           value="{{ form.email.value|default:'' }}">
+                </div>
+
+                {% if action == "Create" %}
+                <div class="form-group">
+                    <label for="id_password">Password</label>
+                    {{ form.password.errors }}
+                    <input type="password" name="password" id="id_password" class="form-control" required>
+                </div>
+                {% else %}
+                <div class="form-group">
+                    <label for="id_new_password">New Password</label>
+                    {{ form.new_password.errors }}
+                    <input type="password" name="new_password" id="id_new_password" class="form-control"
+                           placeholder="Leave blank to keep current password">
+                </div>
+                {% endif %}
+
+                <div style="display:grid;grid-template-columns:1fr 1fr{% if action == 'Edit' %} 1fr{% endif %};gap:16px;margin-bottom:24px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" name="is_staff"
+                                   {% if form.is_staff.value %}checked{% endif %}
+                                   style="width:16px;height:16px;accent-color:var(--primary);">
+                            Staff access
+                        </label>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Can log into dashboard</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" name="is_superuser"
+                                   {% if form.is_superuser.value %}checked{% endif %}
+                                   style="width:16px;height:16px;accent-color:var(--primary);">
+                            Superuser
+                        </label>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Full admin access</div>
+                    </div>
+                    {% if action == "Edit" %}
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" name="is_active"
+                                   {% if form.is_active.value %}checked{% endif %}
+                                   style="width:16px;height:16px;accent-color:var(--primary);">
+                            Active
+                        </label>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Uncheck to disable login</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:12px;padding-top:24px;border-top:1px solid var(--border);">
+                    <a href="{% url 'ota_admin:ui_user_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph ph-check"></i> {{ action }} User
+                    </button>
+                </div>
+            </form>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
