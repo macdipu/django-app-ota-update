@@ -112,7 +112,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  in_update_manager:
+  inapp_update_manager:
     dependency: "direct main"
     description:
       path: ".."

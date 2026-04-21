@@ -1,4 +1,4 @@
-# in_update_manager
+# inapp_update_manager
 
 Reusable in-app OTA update manager for Flutter apps, built with `ota_update`, `package_info_plus`, and a clean architecture layout.
 
@@ -15,8 +15,8 @@ Add the package to your app (`path`, git, or hosted source depending on your set
 
 ```yaml
 dependencies:
-  in_update_manager:
-    path: ../in_update_manager
+  inapp_update_manager:
+    path: ../inapp_update_manager
 ```
 
 Then install dependencies:
@@ -30,7 +30,7 @@ flutter pub get
 Wrap your app (or a screen) with `AutoUpdateGate`.
 
 ```dart
-import 'package:in_update_manager/update_manager.dart';
+import 'package:inapp_update_manager/update_manager.dart';
 
 AutoUpdateGate(
   baseUrl: 'https://your-api.example.com',

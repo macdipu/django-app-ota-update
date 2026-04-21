@@ -1,10 +1,10 @@
 {
   "roots": [
-    "in_update_manager"
+    "inapp_update_manager"
   ],
   "packages": [
     {
-      "name": "in_update_manager",
+      "name": "inapp_update_manager",
       "version": "0.0.1",
       "dependencies": [
         "flutter",

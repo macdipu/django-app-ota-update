@@ -22,8 +22,11 @@ class UpdateDialog extends StatelessWidget {
       final info = controller.updateInfo.value;
       if (info == null) return const SizedBox.shrink();
 
-      return AlertDialog(
-        title: const Text('Update Available'),
+      final force = controller.isForceUpdate.value;
+      return WillPopScope(
+        onWillPop: () async => !force,
+        child: AlertDialog(
+          title: const Text('Update Available'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +49,8 @@ class UpdateDialog extends StatelessWidget {
             }),
           ],
         ),
-        actions: _buildActions(context),
+          actions: _buildActions(context),
+        ),
       );
     });
   }

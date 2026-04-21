@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:in_update_manager/update_manager.dart';
+import 'package:inapp_update_manager/update_manager.dart';
 import 'src_example/setup_example.dart';
 
 void main() {

@@ -218,7 +218,7 @@
       "languageVersion": "3.8"
     },
     {
-      "name": "in_update_manager",
+      "name": "inapp_update_manager",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.0"
